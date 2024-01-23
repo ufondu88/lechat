@@ -22,13 +22,19 @@ export class ChatUserService extends BaseController {
       throw new NotFoundException('Community not found')
     }
 
+    this.logger.log('Creating chat user')
+
     const chatUser = this.chatUserRepo.create(createChatUserDto)
     chatUser.community = community
+
+    this.logger.log(chatUser)
 
     return this.chatUserRepo.save(chatUser)
   }
 
   async usersExist(ids: string[]) {
+    this.logger.log(`Checking if users: ${ids} exist`)
+
     const numFound = await this.chatUserRepo.count({
       where: {
         id: In(ids)
@@ -39,14 +45,20 @@ export class ChatUserService extends BaseController {
   }
 
   findAll() {
+    this.logger.log(`Getting all chat users`)
+
     return `This action returns all chatUser`;
   }
 
   findOneByID(id: string) {
+    this.logger.log(`Getting chat user: ${id}`)
+
     return this.chatUserRepo.findOneBy({ id })
   }
 
   findManyById(ids: string[]) {
+    this.logger.log(`Getting chat users: ${ids}`)
+
     const where = ids.map(id => ({ id }));
 
     return this.chatUserRepo.find({ where })

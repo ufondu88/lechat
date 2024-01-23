@@ -10,12 +10,21 @@ import { JwtService } from '@nestjs/jwt';
 import { Role } from 'src/user/entities/role.enum';
 import { ROLES_KEY } from './decorators/auth.metadata';
 import { JWTUser } from './interfaces/jwt-payload.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService, private reflector: Reflector) { }
+  constructor(
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    private jwtService: JwtService,
+    private reflector: Reflector
+  ) { }
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -25,30 +34,36 @@ export class AuthGuard implements CanActivate {
       return true
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request: Request = context.switchToHttp().getRequest();
 
-    // Remove "Bearer " from the authorization string
-    const token = (request.headers.authorization).slice(7);
+    const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('No token present');
     }
 
     try {
-      const user: JWTUser = this.jwtService.decode(token);
+      const jwtUser: JWTUser = this.jwtService.decode(token);
 
-      // is at least one of the required roles a role that the user has
-      const userHasRequiredRoles = requiredRoles.some(role => {
-        return user.roles.includes(role)
-      })
+      const { email } = jwtUser
 
-      if (!userHasRequiredRoles) {
-        throw new UnauthorizedException('user does not have correct role access')
+      const user = await this.userRepository.findOneBy({ email })
+
+      if (!user) {
+        throw new UnauthorizedException('User does not exist')
       }
+
+      request.user = user
+
     } catch (error) {
       throw new InternalServerErrorException();
     }
 
     return true;
+  }
+
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
   }
 }

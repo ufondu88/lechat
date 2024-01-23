@@ -17,18 +17,23 @@ export class CommunityController {
     return this.communityService.findAll();
   }
 
-  @Get(':id')
+  @Get('id/:id')
   findOne(@Param('id') id: string) {
     return this.communityService.findOne(id);
   }
 
+  @Get('key/:key')
+  findOneByApiKey(@Param('key') key: string) {
+    return this.communityService.findOneByApiKey(key);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCommunityDto: UpdateCommunityDto) {
-    return this.communityService.update(+id, updateCommunityDto);
+    return this.communityService.update(id, updateCommunityDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.communityService.remove(+id);
+    return this.communityService.remove(id);
   }
 }

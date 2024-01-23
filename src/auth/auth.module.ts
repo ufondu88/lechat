@@ -6,7 +6,7 @@ import { User } from 'src/user/entities/user.entity';
 import { UserModule } from 'src/user/user.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { SupabaseStrategy } from './strategies/supabase.strategy';
+import { AuthGuard } from './auth.guard';
 
 @Module({
   imports: [
@@ -18,6 +18,6 @@ import { SupabaseStrategy } from './strategies/supabase.strategy';
     UserModule
   ],
   controllers: [AuthController],
-  providers: [AuthService, SupabaseStrategy],
+  providers: [AuthService, AuthGuard],
 })
 export class AuthModule { }

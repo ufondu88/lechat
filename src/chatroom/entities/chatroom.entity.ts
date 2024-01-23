@@ -7,7 +7,7 @@ export class ChatRoom {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToMany(() => ChatUser)
+  @ManyToMany(() => ChatUser, chatuser => chatuser.chatRooms)
   @JoinTable()
   users: ChatUser[]
 
