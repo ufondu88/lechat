@@ -1,5 +1,5 @@
 import { Community } from "src/community/entities/community.entity";
-import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class ApiKey {
@@ -15,4 +15,7 @@ export class ApiKey {
 
   @Column({default: true})
   upToDate: boolean;
+
+  @CreateDateColumn()
+  created_at: Date
 }

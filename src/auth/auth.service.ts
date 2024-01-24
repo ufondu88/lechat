@@ -1,5 +1,4 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { handleError } from 'src/helpers/error-handler.function';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
@@ -10,34 +9,31 @@ import { BaseSupabaseService } from 'src/helpers/base.supabase.service';
 
 @Injectable()
 export class AuthService extends BaseSupabaseService {
-  constructor(
-    private userService: UserService,
-    private jwtService: JwtService
-  ) { 
+  constructor(private userService: UserService) {
     super('AuthService')
   }
 
   /**
-    Registers a new user to the system
-    @param registrationInfo - Information about the user to be registered
-    @returns A promise resolving to void or throwing an exception if the email or username already exists
+   * Registers a new user to the system
+   * 
+   * @param registrationInfo - Information about the user to be registered
+   * @returns A promise resolving to void or throwing an exception if the email already exists
   */
   async signUp(registrationInfo: RegistrationDto) {
-    const { email, password } = registrationInfo;
+    try {
+      let { email, password } = registrationInfo;
+      const { data, error } = await this.supabaseAuth.auth.signUp({ email, password })
 
-    const { data, error } = await this.supabaseAuth.auth.signUp({ email, password })
+      if (error) handleError(error)
 
-    if (error) {
-      handleError(error)
+      let { password: notNeeded, ...needed } = registrationInfo
+      const id = data.user.id
+      const user: CreateUserDto = { ...needed, id }
+
+      return this.userService.create(user);
+    } catch (error) {
+      this.logger.error(`Error during signup: ${error.message}`)
     }
-
-    delete registrationInfo.password
-    
-    const id = data.user.id
-
-    const user: CreateUserDto = { ...registrationInfo, id }
-
-    return this.userService.create(user);
   }
 
   async batchSignUp(registrationInfos: RegistrationDto[]) {
@@ -47,50 +43,70 @@ export class AuthService extends BaseSupabaseService {
   }
 
   /**
-    Validates the user's credentials and returns the username
-    @param authCredentials - The user's authentication credentials
-    @returns A promise resolving to the username or throwing an exception if the credentials are invalid
+   * Validates the user's credentials and returns the username
+   * 
+   * @param authCredentials - The user's authentication credentials
+   * @returns A promise resolving to the username or throwing an exception if the credentials are invalid
   */
   async signInWithPassword(authCredentials: AuthCredentialsDto) {
-    const { email, password } = authCredentials;
+    try {
+      const { email, password } = authCredentials;
+      const { data, error } = await this.supabaseAuth.auth.signInWithPassword({ email, password })
 
-    const { data, error } = await this.supabaseAuth.auth.signInWithPassword({ email, password })
+      if (error) handleError(error)
 
-    if (error) {
-      handleError(error)
+      return data
+    } catch (error) {
+      this.logger.error(`Error during signin: ${error.message}`)
     }
-
-    return data
   }
 
+  /**
+   * Resets the password for a user based on the provided reset credentials.
+   * 
+   * @param resetCredentials - DTO containing information for resetting the password.
+   * @returns A promise that resolves to the updated user information after the password reset.
+   * @throws UnauthorizedException if the user is not found.
+   */
   async resetPassword(resetCredentials: ResetPasswordDto) {
-    // Get the email and new password from the reset credentials
-    const { email, password } = resetCredentials;
+    try {
+      // Get the email and new password from the reset credentials
+      const { email, password } = resetCredentials;
 
-    // Find the user in the database by email
-    const currentUser = await this.userService.findOneByID(email);
+      // Find the user in the database by email
+      const currentUser = await this.userService.findOneByID(email);
 
-    // If the user is not found, throw an error
-    if (!currentUser) throw new UnauthorizedException('User not found');
+      // If the user is not found, throw an error
+      if (!currentUser) throw new UnauthorizedException('User not found');
 
-    const { data: user, error } = await this.supabaseAuth.auth.admin.updateUserById(
-      currentUser.id, { password }
-    )
+      const { data: user, error } = await this.supabaseAuth.auth.admin.updateUserById(
+        currentUser.id, { password }
+      );
 
-    if (error) {
-      handleError(error)
+      if (error) handleError(error);
+
+      return user;
+    } catch (error) {
+      this.logger.error(`Error during password reset: ${error.message}`);
     }
-
-    return user
   }
 
+  /**
+   * Deletes a user based on the provided user ID.
+   * 
+   * @param id - User ID to delete.
+   * @returns A promise that resolves to the result of the user deletion.
+   */
   async deleteUser(id: string) {
-    const { data, error } = await this.supabaseAuth.auth.admin.deleteUser(id)
+    try {
+      const { data, error } = await this.supabaseAuth.auth.admin.deleteUser(id);
 
-    if (error) {
-      handleError(error)
+      if (error) handleError(error);
+
+      return data;
+    } catch (error) {
+      this.logger.error(`Error deleting user: ${error.message}`);
     }
-
-    return data
   }
+
 }

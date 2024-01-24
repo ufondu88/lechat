@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
@@ -14,7 +13,6 @@ import { AuthGuard } from './auth.guard';
       defaultStrategy: 'jwt'
     }),
     TypeOrmModule.forFeature([User]),
-    JwtModule,
     UserModule
   ],
   controllers: [AuthController],

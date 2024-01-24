@@ -15,36 +15,56 @@ export class MessageService extends BaseController {
     private chatUserService: ChatUserService
   ) { super('MessageService') }
 
+
+  /**
+   * Creates a new message based on the provided DTO.
+   * 
+   * @param createMessageDto - DTO containing information for creating a message.
+   * @returns A promise that resolves to the created message.
+   * @throws NotFoundException if the sender or chatroom is not found.
+   * @throws BadRequestException if the sender is not part of the chatroom.
+   */
   async create(createMessageDto: CreateMessageDto) {
     try {
-      const { sender, value, chatroomId } = createMessageDto
-  
-      const chatSender = await this.chatUserService.findOneByID(sender)
-      if (!chatSender) 
-        throw new NotFoundException(`User ${sender} not found`)
-      
-      const chatroom = await this.chatroomService.findOne(chatroomId)
-      if (!chatroom) 
-        throw new NotFoundException(`Chatroom ${chatroomId} not found`)
-      
-      const userInChatroom = await this.chatroomService.userIsInChatroom(sender, chatroomId)
-      if (!userInChatroom) 
-        throw new BadRequestException(`User ${sender} is not part of chatroom ${chatroomId}`)
-      
-      const messageObject = { value, sender: chatSender, chatroom }
-      const message = this.messageRepo.create(messageObject)
+      const { sender, value, chatroomId } = createMessageDto;
+
+      const chatSender = await this.chatUserService.findOneByID(sender);
+      if (!chatSender)
+        throw new NotFoundException(`User ${sender} not found`);
+
+      const chatroom = await this.chatroomService.findOne(chatroomId);
+      if (!chatroom)
+        throw new NotFoundException(`Chatroom ${chatroomId} not found`);
+
+      const userInChatroom = await this.chatroomService.userIsInChatroom(sender, chatroomId);
+      if (!userInChatroom)
+        throw new BadRequestException(`User ${sender} is not part of chatroom ${chatroomId}`);
+
+      const messageObject = { value, sender: chatSender, chatroom };
+      const message = this.messageRepo.create(messageObject);
 
       this.logger.log(`Message created successfully`);
 
-      return this.messageRepo.save(message)
+      return await this.messageRepo.save(message);
     } catch (error) {
-      this.logger.error(`Error creating message: ${error.message}`)
+      this.logger.error(`Error creating message: ${error.message}`);
     }
   }
 
+  /**
+   * Retrieves all messages for a specific chatroom.
+   * 
+   * @param chatroomId - ID of the chatroom to retrieve messages for.
+   * @returns A promise that resolves to an array of messages.
+   */
   async findAllByChatroom(chatroomId: string) {
-    const chatroom = await this.chatroomService.findOne(chatroomId)
+    try {
+      const chatroom = await this.chatroomService.findOne(chatroomId);
 
-    return this.messageRepo.findBy({ chatroom })
+      return await this.messageRepo.findBy({ chatroom });
+    } catch (error) {
+      this.logger.error(`Error retrieving messages: ${error.message}`);
+    }
   }
+
 }

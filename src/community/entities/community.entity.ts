@@ -1,7 +1,7 @@
 import { ApiKey } from "src/api-key/entities/api-key.entity";
 import { ChatUser } from "src/chat-user/entities/chat-user.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class Community { 
@@ -19,4 +19,10 @@ export class Community {
 
   @OneToMany(() => ChatUser, chatuser => chatuser.community)
   chatUsers: ChatUser[]
+
+  @CreateDateColumn()
+  created_at: Date
+
+  @UpdateDateColumn()
+  updated_at: Date
 }

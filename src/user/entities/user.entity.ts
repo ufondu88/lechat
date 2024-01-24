@@ -1,5 +1,5 @@
 import { Community } from "src/community/entities/community.entity";
-import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -20,6 +20,12 @@ export class User {
 
   @OneToMany(() => Community, commnuoty => commnuoty.id)
   communities: Community[]
+
+  @CreateDateColumn()
+  created_at: Date
+
+  @UpdateDateColumn()
+  updated_at: Date
 
   @BeforeInsert()
   @BeforeUpdate()

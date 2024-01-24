@@ -1,6 +1,6 @@
 import { ChatUser } from "src/chat-user/entities/chat-user.entity";
 import { Message } from "src/message/entities/message.entity";
-import { Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class ChatRoom {
@@ -13,4 +13,10 @@ export class ChatRoom {
 
   @OneToMany(() => Message, message => message.chatroom)
   messages: Message[]
+
+  @CreateDateColumn()
+  created_at: Date
+
+  @UpdateDateColumn()
+  updated_at: Date
 }

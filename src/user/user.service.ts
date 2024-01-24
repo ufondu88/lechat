@@ -23,29 +23,26 @@ export class UserService extends BaseController {
     try {
       // check if user exists
       this.logger.log(`Looking for user: ${createUserDto.name}`)
-  
+
       let user = await this.userRepo.findOneBy({ name: createUserDto.name });
-  
+
       if (user) {
         this.logger.log(`User ${user.name} exists already. Updating...`);
-        
-        const userID = user.id;        
+
+        const userID = user.id;
         user.id = createUserDto.id;
         await this.userRepo.update(userID, user);
         return user
-        
+
       } else {
         this.logger.log(`Creating user ${createUserDto.name}`);
-       
+
         user = this.userRepo.create(createUserDto);
         return this.userRepo.save(user);
       }
     } catch (error) {
       this.logger.error(`Error creating user: ${error.message}`);
-      
-      throw error; 
     }
-
   }
 
   /**
@@ -93,23 +90,21 @@ export class UserService extends BaseController {
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     try {
       const user = await this.findOneByID(id);
-  
+
       if (!user) {
         throw new NotFoundException(`User with ID "${id}" not found`);
       }
-  
+
       user.id = updateUserDto.id
       user.email = updateUserDto.email
       user.name = updateUserDto.name
       user.telephone = updateUserDto.telephone
-  
+
       this.logger.log(`Updating user: ${user}`)
-  
+
       return this.userRepo.save(user);
     } catch (error) {
       this.logger.error(`Error updating user: ${error.message}`);
-      
-      throw error;
     }
   }
 
@@ -133,18 +128,16 @@ export class UserService extends BaseController {
   async remove(id: string): Promise<string> {
     try {
       this.logger.log(`Removing user with id: ${id}`)
-  
+
       const result = await this.userRepo.delete(id);
-  
+
       if (result.affected === 0) {
         throw new NotFoundException(`User with ID "${id}" not found`);
       }
-      
+
       return `User with ID "${id}" deleted successfully`
     } catch (error) {
       this.logger.error(`Error removing user: ${error.message}`);
-      
-      throw error;
     }
   }
 

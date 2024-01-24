@@ -43,7 +43,7 @@ export class CommunityService extends BaseController {
       await this.apiKeyService.generateAndSaveApiKey(community);
 
       this.logger.log(`Community ${community.name} created successfully`);
-      
+
       return `Community ${community.name} created successfully`;
     } catch (error) {
       this.logger.error(`Error creating community: ${error.message}`);
@@ -89,15 +89,19 @@ export class CommunityService extends BaseController {
    * @returns The found community or throws a NotFoundException if not found.
    */
   async findOneByApiKey(key: string): Promise<Community> {
-    const communities = await this.findAll(['apiKey']);
-    if (!communities || communities.length === 0) 
-      throw new NotFoundException('Community not found for the given API key');
+    try {
+      const communities = await this.findAll(['apiKey']);
+      if (!communities || communities.length === 0) 
+        throw new NotFoundException('Community not found for the given API key');
+      
+      const community = communities.find((c) => c.apiKey.key === key);
+      if (!community) 
+        throw new NotFoundException('Community not found for the given API key');
     
-    const community = communities.find((c) => c.apiKey.key === key);
-    if (!community) 
-      throw new NotFoundException('Community not found for the given API key');
-  
-    return community;
+      return community;
+    } catch (error) {
+      this.logger.error(`Error finding community by API key: ${error.message}`)
+    }
   }
 
   /**

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatUserService } from 'src/chat-user/chat-user.service';
 import { BaseController } from 'src/helpers/base.controller';
@@ -26,17 +26,21 @@ export class ChatroomService extends BaseController {
    * @returns The created or existing chatroom.
    */
   async create(chatters: string[]): Promise<ChatRoom> {
-    const usersExist = await this.chatUserService.usersExist(chatters);
-    if (!usersExist) throw new BadRequestException('At least one of the users does not exist');
-    
-    let chatroom = await this.findExistingOne(chatters);
-    if (chatroom) return chatroom;
-    
-    this.logger.log(`Creating chatroom for ${chatters}`);
-
-    const users = await this.chatUserService.findManyById(chatters);
-    chatroom = this.chatroomRepo.create({ users });
-    return await this.chatroomRepo.save(chatroom);
+    try {
+      const usersExist = await this.chatUserService.usersExist(chatters);
+      if (!usersExist) throw new BadRequestException('At least one of the users does not exist');
+      
+      let chatroom = await this.findExistingOne(chatters);
+      if (chatroom) return chatroom;
+      
+      this.logger.log(`Creating chatroom for ${chatters}`);
+  
+      const users = await this.chatUserService.findManyById(chatters);
+      chatroom = this.chatroomRepo.create({ users });
+      return await this.chatroomRepo.save(chatroom);
+    } catch (error) {
+      this.logger.error(`Error creating chatroom: ${error.message}`)
+    }
   }
 
   /**
@@ -56,20 +60,24 @@ export class ChatroomService extends BaseController {
    * @returns The existing chatroom or undefined if not found.
    */
   async findExistingOne(chatters: string[]): Promise<ChatRoom | undefined> {
-    this.logger.log(`Retrieving chatroom between ${chatters}`);
-
-    // Fetch all chatrooms with their users relationship eagerly loaded
-    const chatrooms = await this.findAll(['users']);
-
-    // Fetch the first chatroom where the length of users in the chatroom
-    // is equal to the length of the passed-in chatters array and
-    // every user in the chatroom is in the chatters array
-    return chatrooms.find((chatroom) => {
-      return (
-        chatroom.users.length === chatters.length &&
-        chatroom.users.every((user) => chatters.includes(user.id))
-      );
-    });
+    try {
+      this.logger.log(`Retrieving chatroom between ${chatters}`);
+  
+      // Fetch all chatrooms with their users relationship eagerly loaded
+      const chatrooms = await this.findAll(['users']);
+  
+      // Fetch the first chatroom where the length of users in the chatroom
+      // is equal to the length of the passed-in chatters array and
+      // every user in the chatroom is in the chatters array
+      return chatrooms.find((chatroom) => {
+        return (
+          chatroom.users.length === chatters.length &&
+          chatroom.users.every((user) => chatters.includes(user.id))
+        );
+      });
+    } catch (error) {
+      this.logger.error(`Error getting chatroom by chatters: ${error.message}`)
+    }
   }
 
   /**
@@ -79,15 +87,19 @@ export class ChatroomService extends BaseController {
    * @returns Array of chatrooms associated with the user.
    */
   async findByUserId(id: string): Promise<ChatRoom[]> {
-    this.logger.log(`Finding chatrooms for user ${id}`);
-
-    // Fetch all chatrooms with their users relationship eagerly loaded
-    const chatrooms = await this.findAll(['users']);
-
-    // Filter chatrooms based on the user ID
-    return chatrooms.filter((chatroom) =>
-      chatroom.users.some((user) => user.id === id)
-    );
+    try {
+      this.logger.log(`Finding chatrooms for user ${id}`);
+  
+      // Fetch all chatrooms with their users relationship eagerly loaded
+      const chatrooms = await this.findAll(['users']);
+  
+      // Filter chatrooms based on the user ID
+      return chatrooms.filter((chatroom) =>
+        chatroom.users.some((user) => user.id === id)
+      );
+    } catch (error) {
+      this.logger.error(`Error getting chatroom by user ID: ${error.message}`)
+    }
   }
 
   /**
@@ -117,13 +129,51 @@ export class ChatroomService extends BaseController {
     return chatUserChatroom ? true : false
   }
 
+  /**
+   * Updates an existing chatroom based on the provided ID and DTO.
+   *
+   * @param id - Chatroom ID to update.
+   * @param updateChatroomDto - DTO containing information to update the chatroom.
+   * @returns The updated chatroom or throws a NotFoundException if the chatroom is not found.
+   */
+  async update(id: string, updateChatroomDto: UpdateChatroomDto) {
+    try {
+      const chatroom = await this.findOne(id);
+      if (!chatroom)
+        throw new NotFoundException(`Chatroom with ID "${id}" not found`);
 
-  update(id: number, updateChatroomDto: UpdateChatroomDto) {
-    return `This action updates a #${id} chatroom`;
+      await this.chatroomRepo.save(chatroom);
+
+      this.logger.log(`Chatroom with ID "${id}" updated successfully`);
+
+      return chatroom;
+    } catch (error) {
+      this.logger.error(`Error updating chatroom: ${error.message}`);
+
+      throw error;
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} chatroom`;
+  /**
+   * Removes a chatroom based on the provided ID.
+   *
+   * @param id - Chatroom ID to remove.
+   * @returns Promise<string> or throws a NotFoundException if the chatroom is not found.
+   */
+  async remove(id: string) {
+    try {
+      const result = await this.chatroomRepo.delete(id);
+      if (result.affected === 0)
+        throw new NotFoundException(`Chatroom with ID "${id}" not found`);
+
+      this.logger.log(`Chatroom with ID "${id}" deleted successfully`);
+
+      return `Chatroom with ID "${id}" deleted successfully`;
+    } catch (error) {
+      this.logger.error(`Error removing chatroom: ${error.message}`);
+
+      throw error;
+    }
   }
 }
 

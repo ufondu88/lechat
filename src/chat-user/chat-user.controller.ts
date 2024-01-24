@@ -28,11 +28,11 @@ export class ChatUserController {
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateChatUserDto: UpdateChatUserDto) {
-    return this.chatUserService.update(+id, updateChatUserDto);
+    return this.chatUserService.update(id, updateChatUserDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.chatUserService.remove(+id);
+    return this.chatUserService.remove(id);
   }
 }
