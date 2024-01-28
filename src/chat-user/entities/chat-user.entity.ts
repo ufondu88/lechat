@@ -1,7 +1,7 @@
-import { ChatRoom } from "src/chatroom/entities/chatroom.entity";
-import { Community } from "src/community/entities/community.entity";
-import { Message } from "src/message/entities/message.entity";
-import { PrimaryGeneratedColumn, Column, ManyToOne, Entity, OneToMany, ManyToMany, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { ChatRoom } from "../../chatroom/entities/chatroom.entity";
+import { Community } from "../../community/entities/community.entity";
+import { Message } from "../../message/entities/message.entity";
+import { Column, CreateDateColumn, Entity, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
 export class ChatUser {
@@ -12,17 +12,17 @@ export class ChatUser {
   externalId: string;
 
   @ManyToOne(() => Community)
-  community: Community
+  community?: Community
 
   @ManyToMany(() => ChatRoom, chatroom => chatroom.users)
-  chatRooms: ChatRoom[]
+  chatRooms?: ChatRoom[]
 
   @OneToMany(() => Message, message => message.sender)
-  messages: Message[]
+  messages?: Message[]
 
   @CreateDateColumn()
-  created_at: Date
+  created_at?: Date
 
   @UpdateDateColumn()
-  updated_at: Date
+  updated_at?: Date
 }

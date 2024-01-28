@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CommunityService } from '../community/community.service';
+import { BaseController } from '../helpers/classes/base.controller';
 import { In, Repository } from 'typeorm';
 import { CreateChatUserDto } from './dto/create-chat-user.dto';
 import { UpdateChatUserDto } from './dto/update-chat-user.dto';
 import { ChatUser } from './entities/chat-user.entity';
-import { CommunityService } from 'src/community/community.service';
-import { BaseController } from 'src/helpers/base.controller';
 
 @Injectable()
 export class ChatUserService extends BaseController {
@@ -125,11 +125,10 @@ export class ChatUserService extends BaseController {
         throw new NotFoundException(`Chat user with ID "${id}" not found`);
 
       chatuser.externalId = updateChatUserDto.externalId;
-      await this.chatUserRepo.save(chatuser);
-
+      
       this.logger.log(`Chat user with ID "${id}" updated successfully`);
-
-      return chatuser;
+      
+      return await this.chatUserRepo.save(chatuser);
     } catch (error) {
       this.logger.error(`Error updating chat user: ${error.message}`);
     }
@@ -152,7 +151,7 @@ export class ChatUserService extends BaseController {
 
       return `Chat user with ID "${id}" deleted successfully`;
     } catch (error) {
-      this.logger.error(`Error removing Chat user: ${error.message}`);
+      this.logger.error(`Error removing chat user: ${error.message}`);
     }
   }
 }

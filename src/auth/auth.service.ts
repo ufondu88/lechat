@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { handleError } from 'src/helpers/error-handler.function';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { UserService } from 'src/user/user.service';
+import { BaseSupabaseService } from '../helpers/classes/base.supabase.service';
+import { handleError } from '../helpers/classes/error-handler.function';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { UserService } from '../user/user.service';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { RegistrationDto } from './dto/registration.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { BaseSupabaseService } from 'src/helpers/base.supabase.service';
 
 @Injectable()
 export class AuthService extends BaseSupabaseService {

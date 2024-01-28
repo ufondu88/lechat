@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Community } from '../community/entities/community.entity';
+import { BaseController } from '../helpers/classes/base.controller';
 import { Repository } from 'typeorm';
+import { v4 } from 'uuid';
 import { ApiKey } from './entities/api-key.entity';
-import { v4 as uuidv4 } from 'uuid';
-import { Community } from 'src/community/entities/community.entity';
-import { BaseController } from 'src/helpers/base.controller';
 
 @Injectable()
 export class ApiKeyService extends BaseController {
@@ -13,20 +13,24 @@ export class ApiKeyService extends BaseController {
     private readonly apiKeyRepo: Repository<ApiKey>,
   ) { super('ApiKeyService') }
 
+  apiKey() {
+    return v4()
+  }
+
   async generateAndSaveApiKey(community: Community): Promise<ApiKey> {
     try {
       let key: string
       let existingApiKey: ApiKey
-  
+
       do {
-        key = uuidv4();
-  
+        key = this.apiKey();
+
         // Check if the API key already exists in the database
         existingApiKey = await this.apiKeyRepo.findOne({
           where: { key }
         });
       } while (existingApiKey);
-  
+
       // If the key is unique, save it to the database
       const apiKey = this.apiKeyRepo.create({ key });
       apiKey.community = community
@@ -36,7 +40,7 @@ export class ApiKeyService extends BaseController {
     }
   }
 
-  findOneByValue(key: string) {    
-    return this.apiKeyRepo.findOneBy({key})
+  findOneByValue(key: string) {
+    return this.apiKeyRepo.findOneBy({ key })
   }
 }

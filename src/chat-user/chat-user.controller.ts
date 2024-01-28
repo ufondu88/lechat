@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiKeyAuthGuard } from '../api-key/api-key.guard';
 import { ChatUserService } from './chat-user.service';
 import { CreateChatUserDto } from './dto/create-chat-user.dto';
 import { UpdateChatUserDto } from './dto/update-chat-user.dto';
-import { ApiKeyAuthGuard } from 'src/api-key/api-key.guard';
 
 @Controller('chat-user')
 export class ChatUserController {

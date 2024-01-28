@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { CommunityService } from './community.service';
-import { CommunityController } from './community.controller';
-import { ApiKeyModule } from 'src/api-key/api-key.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ApiKeyModule } from '../api-key/api-key.module';
+import { UserModule } from '../user/user.module';
+import { CommunityController } from './community.controller';
+import { CommunityService } from './community.service';
 import { Community } from './entities/community.entity';
-import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -16,4 +16,4 @@ import { UserModule } from 'src/user/user.module';
   providers: [CommunityService],
   exports: [CommunityService],
 })
-export class CommunityModule {}
+export class CommunityModule { }

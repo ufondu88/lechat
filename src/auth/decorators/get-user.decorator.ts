@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { User } from 'src/user/entities/user.entity';
+import { User } from '../../user/entities/user.entity';
 
 export const GetUserFullName = createParamDecorator((data, ctx: ExecutionContext): string => {
   const req = ctx.switchToHttp().getRequest();

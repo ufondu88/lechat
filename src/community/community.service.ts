@@ -1,12 +1,12 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ApiKeyService } from '../api-key/api-key.service';
+import { BaseController } from '../helpers/classes/base.controller';
+import { UserService } from '../user/user.service';
+import { Repository } from 'typeorm';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community } from './entities/community.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ApiKeyService } from 'src/api-key/api-key.service';
-import { UserService } from 'src/user/user.service';
-import { BaseController } from 'src/helpers/base.controller';
 
 @Injectable()
 export class CommunityService extends BaseController {
@@ -29,7 +29,7 @@ export class CommunityService extends BaseController {
       // get user
       const user = await this.userService.findOneByID(userId);
       if (!user) throw new NotFoundException('User not found');
-      
+
       // check if community exists already
       const existingCommunity = await this.findOneByName(createCommunityDto.name);
       if (existingCommunity) throw new ConflictException('Community name already exists');
@@ -47,8 +47,6 @@ export class CommunityService extends BaseController {
       return `Community ${community.name} created successfully`;
     } catch (error) {
       this.logger.error(`Error creating community: ${error.message}`);
-      
-      throw error;
     }
   }
 
@@ -91,13 +89,13 @@ export class CommunityService extends BaseController {
   async findOneByApiKey(key: string): Promise<Community> {
     try {
       const communities = await this.findAll(['apiKey']);
-      if (!communities || communities.length === 0) 
+      if (!communities || communities.length === 0)
         throw new NotFoundException('Community not found for the given API key');
-      
+
       const community = communities.find((c) => c.apiKey.key === key);
-      if (!community) 
+      if (!community)
         throw new NotFoundException('Community not found for the given API key');
-    
+
       return community;
     } catch (error) {
       this.logger.error(`Error finding community by API key: ${error.message}`)
@@ -114,19 +112,17 @@ export class CommunityService extends BaseController {
   async update(id: string, updateCommunityDto: UpdateCommunityDto) {
     try {
       const community = await this.findOne(id);
-      if (!community) 
+      if (!community)
         throw new NotFoundException(`Community with ID "${id}" not found`);
-      
+
       community.name = updateCommunityDto.name;
       await this.communityRepo.save(community);
 
       this.logger.log(`Community with ID "${id}" updated successfully`);
-      
+
       return community;
     } catch (error) {
       this.logger.error(`Error updating community: ${error.message}`);
-      
-      throw error;
     }
   }
 
@@ -139,16 +135,14 @@ export class CommunityService extends BaseController {
   async remove(id: string) {
     try {
       const result = await this.communityRepo.delete(id);
-      if (result.affected === 0) 
+      if (result.affected === 0)
         throw new NotFoundException(`Community with ID "${id}" not found`);
-      
+
       this.logger.log(`Community with ID "${id}" deleted successfully`);
-      
+
       return `Community with ID "${id}" deleted successfully`;
     } catch (error) {
       this.logger.error(`Error removing community: ${error.message}`);
-      
-      throw error;
     }
   }
 }

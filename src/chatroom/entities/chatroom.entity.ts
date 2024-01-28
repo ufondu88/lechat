@@ -1,5 +1,5 @@
-import { ChatUser } from "src/chat-user/entities/chat-user.entity";
-import { Message } from "src/message/entities/message.entity";
+import { Message } from "../../message/entities/message.entity";
+import { ChatUser } from "../../chat-user/entities/chat-user.entity";
 import { CreateDateColumn, Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()
@@ -15,8 +15,8 @@ export class ChatRoom {
   messages: Message[]
 
   @CreateDateColumn()
-  created_at: Date
+  created_at?: Date
 
   @UpdateDateColumn()
-  updated_at: Date
+  updated_at?: Date
 }

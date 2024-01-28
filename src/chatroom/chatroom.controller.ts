@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiKeyAuthGuard } from 'src/api-key/api-key.guard';
-import { BaseController } from 'src/helpers/base.controller';
+import { ApiKeyAuthGuard } from '../api-key/api-key.guard';
+import { BaseController } from '../helpers/classes/base.controller';
 import { ChatroomService } from './chatroom.service';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 

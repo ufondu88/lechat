@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { BaseController } from '../helpers/classes/base.controller';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { BaseController } from 'src/helpers/base.controller';
 
 @Injectable()
 export class UserService extends BaseController {
@@ -29,17 +29,14 @@ export class UserService extends BaseController {
       if (user) {
         this.logger.log(`User ${user.name} exists already. Updating...`);
 
-        const userID = user.id;
         user.id = createUserDto.id;
-        await this.userRepo.update(userID, user);
-        return user
-
       } else {
         this.logger.log(`Creating user ${createUserDto.name}`);
 
         user = this.userRepo.create(createUserDto);
-        return this.userRepo.save(user);
       }
+
+      return this.userRepo.save(user);
     } catch (error) {
       this.logger.error(`Error creating user: ${error.message}`);
     }
@@ -91,9 +88,7 @@ export class UserService extends BaseController {
     try {
       const user = await this.findOneByID(id);
 
-      if (!user) {
-        throw new NotFoundException(`User with ID "${id}" not found`);
-      }
+      if (!user) throw new NotFoundException(`User with ID "${id}" not found`);
 
       user.id = updateUserDto.id
       user.email = updateUserDto.email

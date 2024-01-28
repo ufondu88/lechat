@@ -1,18 +1,20 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ChatUserService } from 'src/chat-user/chat-user.service';
-import { ChatroomService } from 'src/chatroom/chatroom.service';
 import { Repository } from 'typeorm';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Message } from './entities/message.entity';
-import { BaseController } from 'src/helpers/base.controller';
+import { ChatUserService } from '../chat-user/chat-user.service';
+import { ChatroomService } from '../chatroom/chatroom.service';
+import { CryptoService } from '../crypto/crypto.service';
+import { BaseController } from '../helpers/classes/base.controller';
 
 @Injectable()
 export class MessageService extends BaseController {
   constructor(
     @InjectRepository(Message) private messageRepo: Repository<Message>,
     private chatroomService: ChatroomService,
-    private chatUserService: ChatUserService
+    private chatUserService: ChatUserService,
+    private cryptoService: CryptoService
   ) { super('MessageService') }
 
 
@@ -28,19 +30,18 @@ export class MessageService extends BaseController {
     try {
       const { sender, value, chatroomId } = createMessageDto;
 
-      const chatSender = await this.chatUserService.findOneByID(sender);
-      if (!chatSender)
-        throw new NotFoundException(`User ${sender} not found`);
+      // Validate sender
+      const chatSender = await this.validateUser(sender);
 
-      const chatroom = await this.chatroomService.findOne(chatroomId);
-      if (!chatroom)
-        throw new NotFoundException(`Chatroom ${chatroomId} not found`);
+      // Validate chatroom
+      const chatroom = await this.validateChatroom(chatroomId);
 
-      const userInChatroom = await this.chatroomService.userIsInChatroom(sender, chatroomId);
-      if (!userInChatroom)
-        throw new BadRequestException(`User ${sender} is not part of chatroom ${chatroomId}`);
+      // Check if the sender is part of the chatroom
+      await this.validateUserInChatroom(sender, chatroomId);
 
-      const messageObject = { value, sender: chatSender, chatroom };
+      const encryptedMessage = this.cryptoService.encrypt(value)
+
+      const messageObject = { value: encryptedMessage, sender: chatSender, chatroom };
       const message = this.messageRepo.create(messageObject);
 
       this.logger.log(`Message created successfully`);
@@ -51,20 +52,56 @@ export class MessageService extends BaseController {
     }
   }
 
+  private async validateUser(userId: string) {
+    const chatSender = await this.chatUserService.findOneByID(userId);
+    if (!chatSender) {
+      throw new NotFoundException(`User ${userId} not found`);
+    }
+    return chatSender;
+  }
+
+  private async validateChatroom(chatroomId: string) {
+    const chatroom = await this.chatroomService.findOne(chatroomId);
+    if (!chatroom) {
+      throw new NotFoundException(`Chatroom ${chatroomId} not found`);
+    }
+    return chatroom;
+  }
+
+  private async validateUserInChatroom(userId: string, chatroomId: string) {
+    const userInChatroom = await this.chatroomService.userIsInChatroom(userId, chatroomId);
+    if (!userInChatroom) {
+      throw new BadRequestException(`User ${userId} is not part of chatroom ${chatroomId}`);
+    }
+  }
+
   /**
    * Retrieves all messages for a specific chatroom.
    * 
    * @param chatroomId - ID of the chatroom to retrieve messages for.
    * @returns A promise that resolves to an array of messages.
    */
-  async findAllByChatroom(chatroomId: string) {
+  async findAllByChatroom(chatroomId: string) {    
     try {
-      const chatroom = await this.chatroomService.findOne(chatroomId);
+      const messages = await this.messageRepo.find({
+        relations: ['chatroom'],
+        where: {
+          chatroom: {
+            id: chatroomId
+          }
+        }
+      });   
 
-      return await this.messageRepo.findBy({ chatroom });
+      return this.decrypted(messages)
     } catch (error) {
       this.logger.error(`Error retrieving messages: ${error.message}`);
     }
+  }
+
+  private decrypted(messages: Message[]) {
+    messages.forEach(message => message.value = this.cryptoService.decrypt(message.value))
+
+    return messages
   }
 
 }

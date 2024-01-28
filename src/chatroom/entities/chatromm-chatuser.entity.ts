@@ -1,4 +1,4 @@
-import { ChatUser } from "src/chat-user/entities/chat-user.entity";
+import { ChatUser } from "../../chat-user/entities/chat-user.entity";
 import { Entity, JoinColumn, ManyToOne, PrimaryColumn } from "typeorm";
 import { ChatRoom } from "./chatroom.entity";
 

@@ -12,6 +12,8 @@ import { ChatUserModule } from './chat-user/chat-user.module';
 import { MessageModule } from './message/message.module';
 import { ChatroomModule } from './chatroom/chatroom.module';
 import { AuthModule } from './auth/auth.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { CryptoService } from './crypto/crypto.service';
 
 @Module({
   imports: [
@@ -25,6 +27,7 @@ import { AuthModule } from './auth/auth.module';
         expiresIn: 21600,
       },
     }),
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forRoot(typeOrmConfig),
     UserModule,
     CommunityModule,
@@ -36,6 +39,6 @@ import { AuthModule } from './auth/auth.module';
 
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, CryptoService],
 })
 export class AppModule {}

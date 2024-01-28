@@ -1,22 +1,18 @@
 import { Module } from '@nestjs/common';
-import { ChatroomService } from './chatroom.service';
-import { ChatroomController } from './chatroom.controller';
-import { ChatRoom } from './entities/chatroom.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PassportModule } from '@nestjs/passport';
-import { ApiKeyModule } from 'src/api-key/api-key.module';
-import { ApiKeyAuthGuard } from 'src/api-key/api-key.guard';
-import { ChatUserModule } from 'src/chat-user/chat-user.module';
-import { CommunityModule } from 'src/community/community.module';
+import { ApiKeyAuthGuard } from '../api-key/api-key.guard';
+import { ApiKeyModule } from '../api-key/api-key.module';
+import { ChatUserModule } from '../chat-user/chat-user.module';
+import { ChatroomController } from './chatroom.controller';
+import { ChatroomService } from './chatroom.service';
 import { ChatroomChatuser } from './entities/chatromm-chatuser.entity';
+import { ChatRoom } from './entities/chatroom.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ChatRoom, ChatroomChatuser]),
-    PassportModule.register({ defaultStrategy: 'apiKey' }),
     ApiKeyModule,
     ChatUserModule,
-    CommunityModule
   ],
   controllers: [ChatroomController],
   providers: [
@@ -25,4 +21,4 @@ import { ChatroomChatuser } from './entities/chatromm-chatuser.entity';
   ],
   exports: [ChatroomService],
 })
-export class ChatroomModule {}
+export class ChatroomModule { }

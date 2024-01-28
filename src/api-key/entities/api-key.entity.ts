@@ -1,4 +1,4 @@
-import { Community } from "src/community/entities/community.entity";
+import { Community } from "../../community/entities/community.entity";
 import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
@@ -8,7 +8,7 @@ export class ApiKey {
 
   @OneToOne(() => Community, community => community.apiKey, {onDelete: 'CASCADE'})
   @JoinColumn()
-  community: Community;
+  community?: Community;
   
   @Column({ unique: true })
   key: string;
@@ -17,5 +17,5 @@ export class ApiKey {
   upToDate: boolean;
 
   @CreateDateColumn()
-  created_at: Date
+  created_at?: Date
 }

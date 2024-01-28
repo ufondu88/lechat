@@ -1,10 +1,10 @@
-import { ApiKey } from "src/api-key/entities/api-key.entity";
-import { ChatUser } from "src/chat-user/entities/chat-user.entity";
-import { User } from "src/user/entities/user.entity";
+import { ApiKey } from "../../api-key/entities/api-key.entity";
+import { ChatUser } from "../../chat-user/entities/chat-user.entity";
 import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { User } from "../../user/entities/user.entity";
 
 @Entity()
-export class Community { 
+export class Community {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -12,7 +12,7 @@ export class Community {
   name: string;
 
   @OneToOne(() => ApiKey, apiKey => apiKey.community)
-  apiKey: ApiKey
+  apiKey?: ApiKey
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   user: User
@@ -21,8 +21,8 @@ export class Community {
   chatUsers: ChatUser[]
 
   @CreateDateColumn()
-  created_at: Date
+  created_at?: Date
 
   @UpdateDateColumn()
-  updated_at: Date
+  updated_at?: Date
 }

@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { CommunityService } from '../community/community.service';
 import { ApiKeyService } from './api-key.service';
-import { CommunityService } from 'src/community/community.service';
 
 @Injectable()
 export class ApiKeyAuthGuard implements CanActivate {
@@ -9,20 +9,20 @@ export class ApiKeyAuthGuard implements CanActivate {
     private readonly communityService: CommunityService
   ) { }
 
-  async canActivate(context: ExecutionContext): Promise < boolean > {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
-    
+
     const apiKey = req.headers['x-api-key']
 
     if (!apiKey) {
       throw new UnauthorizedException('No API key present');
     }
-    
+
     const key = await this.apiKeyService.findOneByValue(apiKey)
-    
+
     if (!key) {
       throw new UnauthorizedException('Invalid API key');
-    }    
+    }
 
     if (!key.upToDate) {
       throw new UnauthorizedException('Key is not up to date');

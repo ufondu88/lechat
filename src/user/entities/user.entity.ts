@@ -1,4 +1,4 @@
-import { Community } from "src/community/entities/community.entity";
+import { Community } from "../../community/entities/community.entity";
 import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn, UpdateDateColumn } from "typeorm";
 
 @Entity()

@@ -1,14 +1,14 @@
-import { Controller, Post, Body, ValidationPipe, Res, UseGuards, Param } from '@nestjs/common';
+import { Body, Controller, Param, Post, UseGuards, ValidationPipe } from '@nestjs/common';
+import { BaseController } from '../helpers/classes/base.controller';
 import { AuthService } from './auth.service';
-import { BaseController } from 'src/helpers/base.controller';
-import { RegistrationDto } from './dto/registration.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import { RegistrationDto } from './dto/registration.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 export class AuthController extends BaseController {
-  
+
   constructor(private readonly authService: AuthService) {
     super('AuthController')
   }
@@ -23,7 +23,7 @@ export class AuthController extends BaseController {
   }
 
   @Post('/batch-signup')
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard)
   batchSignUp(@Body(ValidationPipe) registrationInfos: RegistrationDto[]) {
     return this.authService.batchSignUp(registrationInfos);
   }
@@ -36,7 +36,7 @@ export class AuthController extends BaseController {
   }
 
   @Post('/reset-password')
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard)
   resetPassword(@Body(ValidationPipe) resetCredentials: ResetPasswordDto) {
     this.logger.log(`user password reset: ${resetCredentials.email}`)
 
@@ -44,10 +44,10 @@ export class AuthController extends BaseController {
   }
 
   @Post('/delete/:id')
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard)
   deleteUser(@Param('id') id: string) {
     this.logger.warn(`delete user: ${id}`)
- 
+
     return this.authService.deleteUser(id);
   }
 }
