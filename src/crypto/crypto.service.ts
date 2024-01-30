@@ -3,13 +3,14 @@ import * as crypto from 'crypto';
 import { Crypto } from './crypto.enum';
 
 require('dotenv').config();
-
-const { ENCRYPTION_IV, ENCRYPTION_KEY, ENCRYPTION_METHOD } = process.env
-
 @Injectable()
 export class CryptoService {
-  private key = this.createHash(ENCRYPTION_KEY, 32);
-  private iv = this.createHash(ENCRYPTION_IV, 16); 
+  ENCRYPTION_KEY = process.env['ENCRYPTION_KEY']
+  ENCRYPTION_IV = process.env['ENCRYPTION_IV']
+  ENCRYPTION_METHOD = process.env['ENCRYPTION_METHOD']
+
+  private key = this.createHash(this.ENCRYPTION_KEY, 32);
+  private iv = this.createHash(this.ENCRYPTION_IV, 16); 
 
   /**
    * Creates a hash based on the provided data and hash length.
@@ -19,8 +20,8 @@ export class CryptoService {
    * @returns The hashed string.
    */
   private createHash(data: string, hashLength: number): string {
-    console.log(ENCRYPTION_KEY);
-    console.log(ENCRYPTION_IV);
+    console.log(this.ENCRYPTION_KEY);
+    console.log(this.ENCRYPTION_IV);
     
     return crypto
       .createHash(Crypto.HASH_ALGORITHM)
@@ -36,7 +37,7 @@ export class CryptoService {
    * @returns The encrypted text.
    */
   encrypt(plain_text: string): string {
-    const encryptor = crypto.createCipheriv(ENCRYPTION_METHOD, this.key, this.iv);
+    const encryptor = crypto.createCipheriv(this.ENCRYPTION_METHOD, this.key, this.iv);
     const aes_encrypted =
       encryptor.update(plain_text, Crypto.ENCRYPT_INPUT_ENCODING, Crypto.ENCRYPT_OUTPUT_ENCODING) +
       encryptor.final(Crypto.ENCRYPT_OUTPUT_ENCODING);
@@ -55,7 +56,7 @@ export class CryptoService {
 
     encrypted_string = buff.toString(Crypto.DECRYPT_OUTPUT_ENCODING);
 
-    const decryptor = crypto.createDecipheriv(ENCRYPTION_METHOD, this.key, this.iv);
+    const decryptor = crypto.createDecipheriv(this.ENCRYPTION_METHOD, this.key, this.iv);
 
     return (
       decryptor.update(encrypted_string, Crypto.DECRYPT_INPUT_ENCODING, Crypto.DECRYPT_OUTPUT_ENCODING) +
