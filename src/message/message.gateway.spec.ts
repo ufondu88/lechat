@@ -9,6 +9,8 @@ import { Message } from './entities/message.entity';
 
 describe('MessageGateway', () => {
   let gateway: MessageGateway;
+  let service: MessageService;
+
   const MESSAGE_REPO_TOKEN = getRepositoryToken(Message)
 
   beforeEach(async () => {
@@ -53,7 +55,8 @@ describe('MessageGateway', () => {
       ],
     }).compile();
 
-    gateway = module.get<MessageGateway>(MessageGateway);
+    gateway = module.get(MessageGateway);
+    service = module.get(MessageService);
   });
 
   it('should be defined', () => {

@@ -85,10 +85,10 @@ describe('CommunityService', () => {
       ]
     }).compile();
 
-    service = module.get<CommunityService>(CommunityService);
-    repo = module.get<Repository<Community>>(COMMUNITY_REPO_TOKEN);
-    apiKeyService = module.get<ApiKeyService>(ApiKeyService)
-    userService = module.get<UserService>(UserService)
+    service = module.get(CommunityService);
+    repo = module.get(COMMUNITY_REPO_TOKEN);
+    apiKeyService = module.get(ApiKeyService)
+    userService = module.get(UserService)
 
     spyLoggerError = jest.spyOn(service.logger, 'error');
 
