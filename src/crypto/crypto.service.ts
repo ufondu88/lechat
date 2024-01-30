@@ -19,6 +19,9 @@ export class CryptoService {
    * @returns The hashed string.
    */
   private createHash(data: string, hashLength: number): string {
+    console.log(ENCRYPTION_KEY);
+    console.log(ENCRYPTION_IV);
+    
     return crypto
       .createHash(Crypto.HASH_ALGORITHM)
       .update(data, Crypto.HASH_INPUT_ENCODING)
