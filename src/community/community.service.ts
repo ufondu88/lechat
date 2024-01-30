@@ -1,9 +1,9 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ApiKeyService } from '../api-key/api-key.service';
 import { BaseController } from '../helpers/classes/base.controller';
 import { UserService } from '../user/user.service';
-import { Repository } from 'typeorm';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community } from './entities/community.entity';
@@ -40,7 +40,7 @@ export class CommunityService extends BaseController {
       await this.communityRepo.save(community);
 
       // create the community API key
-      await this.apiKeyService.generateAndSaveApiKey(community);
+      await this.apiKeyService.createKey(community);
 
       this.logger.log(`Community ${community.name} created successfully`);
 

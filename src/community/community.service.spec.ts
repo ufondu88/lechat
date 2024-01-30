@@ -1,13 +1,15 @@
-import 'reflect-metadata'; // Add this line
 import { Test, TestingModule } from '@nestjs/testing';
-import { CommunityService } from './community.service';
-import { CreateCommunityDto } from './dto/create-community.dto';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Community } from './entities/community.entity';
-import { User } from '../user/entities/user.entity';
+import { ApiKey } from 'api-key/entities/api-key.entity';
+import 'reflect-metadata'; // Add this line
 import { Repository } from 'typeorm';
 import { ApiKeyService } from '../api-key/api-key.service';
+import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
+import { CommunityService } from './community.service';
+import { CreateCommunityDto } from './dto/create-community.dto';
+import { UpdateCommunityDto } from './dto/update-community.dto';
+import { Community } from './entities/community.entity';
 
 describe('CommunityService', () => {
   let service: CommunityService;
@@ -15,7 +17,44 @@ describe('CommunityService', () => {
   let userService: UserService
   let repo: Repository<Community>
 
+  let spyLoggerError: jest.SpyInstance
+
   const COMMUNITY_REPO_TOKEN = getRepositoryToken(Community)
+  const user: User = {
+    id: "1",
+    name: 'name',
+    email: 'email',
+    telephone: 'tel',
+    isAdmin: false,
+    communities: [],
+    created_at: new Date(),
+    updated_at: new Date(),
+    formatTelephone() { },
+    updateValues() { },
+  }
+  const key = 'apikey';
+  const apiKey: ApiKey = {
+    id: '1',
+    upToDate: true,
+    key
+  };
+  const community: Community = {
+    id: '1',
+    name: 'Test Community',
+    user,
+    chatUsers: [],
+    apiKey
+  }
+  const communities: Community[] = [
+    community,
+    {
+      id: '2',
+      name: 'Test Community 2',
+      user,
+      chatUsers: [],
+      apiKey: { id: '2', upToDate: true, key: 'another key' }
+    }
+  ]
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,7 +73,7 @@ describe('CommunityService', () => {
         {
           provide: ApiKeyService,
           useValue: {
-            generateAndSaveApiKey: jest.fn(),
+            createKey: jest.fn(),
           }
         },
         {
@@ -50,6 +89,9 @@ describe('CommunityService', () => {
     repo = module.get<Repository<Community>>(COMMUNITY_REPO_TOKEN);
     apiKeyService = module.get<ApiKeyService>(ApiKeyService)
     userService = module.get<UserService>(UserService)
+
+    spyLoggerError = jest.spyOn(service.logger, 'error');
+
   });
 
   describe('create', () => {
@@ -57,38 +99,17 @@ describe('CommunityService', () => {
       name: 'Test Community',
     };
 
-    const user: User = {
-      id: "1",
-      name: 'name',
-      email: 'email',
-      telephone: 'tel',
-      isAdmin: false,
-      communities: [],
-      created_at: new Date(),
-      updated_at: new Date(),
-      formatTelephone() { },
-      updateValues() { },
-    }
-
-    const community: Community = {
-      id: '1',
-      name: 'Test Community',
-      user,
-      chatUsers: [],
-      created_at: new Date(),
-      updated_at: new Date(),
-    }
-
     it('should create a community', async () => {
       jest.spyOn(userService, 'findOneByID').mockResolvedValue(user);
       jest.spyOn(service, 'findOneByName').mockResolvedValue(undefined);
-      jest.spyOn(apiKeyService, 'generateAndSaveApiKey').mockResolvedValue(undefined);
+      jest.spyOn(apiKeyService, 'createKey').mockResolvedValue(undefined);
       jest.spyOn(repo, 'create').mockReturnValueOnce(community)
       jest.spyOn(repo, 'save').mockResolvedValue(community)
 
       const result = await service.create(createCommunityDto, 'b07f6d9c-5019-416b-b9ba-6156223e029f');
-      
-      expect(apiKeyService.generateAndSaveApiKey).toHaveBeenCalled()
+
+      expect(community.user).toEqual(user)
+      expect(apiKeyService.createKey).toHaveBeenCalled()
       expect(result).toEqual(expect.stringContaining("success"));
       expect(repo.create).toHaveBeenCalledTimes(1);
       expect(repo.save).toHaveBeenCalledTimes(1);
@@ -115,5 +136,168 @@ describe('CommunityService', () => {
     });
   });
 
-  // Add other test cases for service methods (findAll, findOne, update, remove, etc.) as needed
+  describe('findAll', () => {
+    it('should find all communitys with relations', async () => {
+      const relations = ['apiKey'];
+      const findSpy = jest.spyOn(repo, 'find').mockResolvedValue([community]);
+
+      const result = await service.findAll(relations);
+
+      expect(findSpy).toHaveBeenCalledWith({ relations });
+      expect(result).toEqual(expect.arrayContaining<Community>([]))
+    });
+
+    it('should find all communitys without relations', async () => {
+      const relations = [];
+      const findSpy = jest.spyOn(repo, 'find').mockResolvedValue([]);
+
+      const result = await service.findAll(relations);
+
+      expect(findSpy).toHaveBeenCalledWith({ relations: [] });
+      expect(result).toEqual(expect.arrayContaining<Community>([]))
+    });
+  });
+
+  describe('findOne', () => {
+    it('should find community by ID', async () => {
+      const id = community.id;
+      const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(community);
+
+      const result = await service.findOne(id);
+
+      expect(findSpy).toHaveBeenCalledWith({ id });
+      expect(result).toEqual(community)
+    });
+
+    it('should not find community by ID', async () => {
+      const id = 'no-community'
+      const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(undefined);
+
+      const result = await service.findOne(id);
+
+      expect(findSpy).toHaveBeenCalledWith({ id });
+      expect(result).toBe(undefined)
+    });
+  });
+
+  describe('findOneByName', () => {
+    it('should find community by name', async () => {
+      const name = community.name;
+      const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(community);
+
+      const result = await service.findOneByName(name);
+
+      expect(findSpy).toHaveBeenCalledWith({ name });
+      expect(result).toEqual(community)
+    });
+
+    it('should not find community by name', async () => {
+      const name = 'no-community'
+      const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(undefined);
+
+      const result = await service.findOneByName(name);
+
+      expect(findSpy).toHaveBeenCalledWith({ name });
+      expect(result).toBe(undefined)
+    });
+  });
+
+  describe('findOneByApiKey', () => {
+    it('should find community by API key', async () => {
+      jest.spyOn(service, 'findAll').mockResolvedValue(communities)
+      const findSpy = jest.spyOn(Array.prototype, 'find')
+
+      const result = await service.findOneByApiKey(key);
+
+      expect(findSpy).toHaveBeenCalled()
+      expect(result).toEqual(community)
+    });
+
+    it('should not find community by API key', async () => {
+      jest.spyOn(service, 'findAll').mockResolvedValue(communities)
+      const findSpy = jest.spyOn(Array.prototype, 'find')
+
+      const result = await service.findOneByApiKey('no key');
+
+      expect(findSpy).toHaveBeenCalled()
+      expect(result).not.toEqual(community)
+      expect(result).toBe(undefined)
+    });
+
+    it('should throw NotFoundException if there are no communities', async () => {
+      jest.spyOn(service, 'findAll').mockResolvedValue(undefined)
+
+      await service.findOneByApiKey(key)
+
+      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+    })
+
+    it('should throw NotFoundException if length of community is 0', async () => {
+      jest.spyOn(service, 'findAll').mockResolvedValue([])
+
+      await service.findOneByApiKey(key)
+
+      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+    })
+
+    it('should throw NotFoundException if community is not found', async () => {
+      jest.spyOn(service, 'findAll').mockResolvedValue(communities)
+
+      const findSpy = jest.spyOn(Array.prototype, 'find').mockReturnValue(undefined)
+      await service.findOneByApiKey(key);
+
+      expect(findSpy).toHaveBeenCalled()
+      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+    })
+  });
+
+  describe('update', () => {
+    const id = '1'
+    const updateCommunityDto: UpdateCommunityDto = {
+      name: 'community name',
+    };
+
+    it('should update and return community', async () => {
+      jest.spyOn(service, 'findOne').mockResolvedValue(community)
+      jest.spyOn(repo, 'save').mockResolvedValue(community)
+
+      const result = await service.update(id, updateCommunityDto)
+
+      expect(result).toEqual(community)
+    })
+
+    it('should throw NotFoundException if community is not found', async () => {
+      jest.spyOn(service, 'findOne').mockResolvedValue(undefined)
+
+      await service.update(id, updateCommunityDto)
+
+      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+    })
+  })
+
+  describe('remove', () => {
+    const id = '1'
+
+    it('should delete community and return confirmation', async () => {
+      const deleteResult = { affected: 1, raw: 0 }
+
+      jest.spyOn(service, 'remove').mockResolvedValue(`Community with ID "${id}" deleted successfully`)
+      jest.spyOn(repo, 'delete').mockResolvedValue(deleteResult)
+
+      const result = await service.remove(id)
+
+      expect(result).toContain('success')
+    })
+
+    it('should throw NotFoundException if community is not found', async () => {
+      const deleteResult = { affected: 0, raw: 0 }
+
+      jest.spyOn(repo, 'delete').mockResolvedValue(deleteResult)
+
+      await service.remove(id)
+
+      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+    })
+  })
+
 });

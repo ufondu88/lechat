@@ -15,7 +15,7 @@ export class Community {
   apiKey?: ApiKey
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  user: User
+  user?: User
 
   @OneToMany(() => ChatUser, chatuser => chatuser.community)
   chatUsers: ChatUser[]

@@ -7,25 +7,25 @@ export class User {
   id: string;
 
   @Column({ unique: true })
-  name: string;
+  name?: string;
 
   @Column({ unique: true })
-  email: string;
+  email?: string;
 
   @Column()
-  telephone: string;
+  telephone?: string;
 
   @Column({ default: false })
   isAdmin: boolean;
 
   @OneToMany(() => Community, commnuoty => commnuoty.id)
-  communities: Community[]
+  communities?: Community[]
 
   @CreateDateColumn()
-  created_at: Date
+  created_at?: Date
 
   @UpdateDateColumn()
-  updated_at: Date
+  updated_at?: Date
 
   @BeforeInsert()
   @BeforeUpdate()

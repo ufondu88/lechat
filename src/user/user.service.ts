@@ -39,6 +39,8 @@ export class UserService extends BaseController {
       return this.userRepo.save(user);
     } catch (error) {
       this.logger.error(`Error creating user: ${error.message}`);
+
+      throw error
     }
   }
 
@@ -59,7 +61,7 @@ export class UserService extends BaseController {
    * @param email - Email to find the user.
    * @returns The found user or undefined if not found.
    */
-  findOneByEmail(email: string): Promise<User | undefined> {
+  findOneByEmail(email: string): Promise<User> {
     this.logger.log(`Looking for user by email: ${email}`)
 
     return this.userRepo.findOneBy({ email });
@@ -71,10 +73,10 @@ export class UserService extends BaseController {
    * @param id - User ID to find.
    * @returns The found user or undefined if not found.
    */
-  findOneByID(id: string): Promise<User | undefined> {
+  async findOneByID(id: string): Promise<User> {
     this.logger.log(`Looking for user by id: ${id}`)
 
-    return this.userRepo.findOneBy({ id });
+    return await this.userRepo.findOneBy({ id });
   }
 
   /**
@@ -100,6 +102,8 @@ export class UserService extends BaseController {
       return this.userRepo.save(user);
     } catch (error) {
       this.logger.error(`Error updating user: ${error.message}`);
+
+      throw error
     }
   }
 

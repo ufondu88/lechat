@@ -66,7 +66,7 @@ describe('ChatroomService', () => {
         {
           provide: CHATROOM_CHATUSER_REPO_TOKEN,
           useClass: Repository
-        },
+        }
       ],
     }).compile();
  
@@ -306,4 +306,3 @@ describe('ChatroomService', () => {
     })
   })
 });
- 

@@ -7,6 +7,8 @@ import { ChatUserService } from '../chat-user/chat-user.service';
 import { ChatroomService } from '../chatroom/chatroom.service';
 import { CryptoService } from '../crypto/crypto.service';
 import { BaseController } from '../helpers/classes/base.controller';
+import { ChatRoom } from 'chatroom/entities/chatroom.entity';
+import { ChatUser } from 'chat-user/entities/chat-user.entity';
 
 @Injectable()
 export class MessageService extends BaseController {
@@ -31,13 +33,22 @@ export class MessageService extends BaseController {
       const { sender, value, chatroomId } = createMessageDto;
 
       // Validate sender
-      const chatSender = await this.validateUser(sender);
+      const chatSender: ChatUser = await this.validateUser(sender);
+      if (!chatSender) {
+        throw new NotFoundException(`User ${sender} not found`);
+      }
 
       // Validate chatroom
-      const chatroom = await this.validateChatroom(chatroomId);
+      const chatroom: ChatRoom = await this.validateChatroom(chatroomId);
+      if (!chatroom) {
+        throw new NotFoundException(`Chatroom ${chatroomId} not found`);
+      }
 
       // Check if the sender is part of the chatroom
-      await this.validateUserInChatroom(sender, chatroomId);
+      const userInChatroom: boolean = await this.validateUserInChatroom(sender, chatroomId);
+      if (!userInChatroom) {
+        throw new BadRequestException(`User ${sender} is not part of chatroom ${chatroomId}`);
+      }
 
       const encryptedMessage = this.cryptoService.encrypt(value)
 
@@ -49,30 +60,21 @@ export class MessageService extends BaseController {
       return await this.messageRepo.save(message);
     } catch (error) {
       this.logger.error(`Error creating message: ${error.message}`);
+
+      throw error
     }
   }
 
-  private async validateUser(userId: string) {
-    const chatSender = await this.chatUserService.findOneByID(userId);
-    if (!chatSender) {
-      throw new NotFoundException(`User ${userId} not found`);
-    }
-    return chatSender;
+  validateUser(userId: string) {
+    return this.chatUserService.findOneByID(userId);
   }
 
-  private async validateChatroom(chatroomId: string) {
-    const chatroom = await this.chatroomService.findOne(chatroomId);
-    if (!chatroom) {
-      throw new NotFoundException(`Chatroom ${chatroomId} not found`);
-    }
-    return chatroom;
+  validateChatroom(chatroomId: string) {
+    return this.chatroomService.findOne(chatroomId);
   }
 
-  private async validateUserInChatroom(userId: string, chatroomId: string) {
-    const userInChatroom = await this.chatroomService.userIsInChatroom(userId, chatroomId);
-    if (!userInChatroom) {
-      throw new BadRequestException(`User ${userId} is not part of chatroom ${chatroomId}`);
-    }
+  async validateUserInChatroom(userId: string, chatroomId: string) {
+    return await this.chatroomService.userIsInChatroom(userId, chatroomId);
   }
 
   /**
@@ -95,10 +97,12 @@ export class MessageService extends BaseController {
       return this.decrypted(messages)
     } catch (error) {
       this.logger.error(`Error retrieving messages: ${error.message}`);
+
+      throw error
     }
   }
 
-  private decrypted(messages: Message[]) {
+  decrypted(messages: Message[]) {
     messages.forEach(message => message.value = this.cryptoService.decrypt(message.value))
 
     return messages

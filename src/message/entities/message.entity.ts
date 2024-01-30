@@ -11,7 +11,7 @@ export class Message {
   sender: ChatUser
 
   @Column({ default: false })
-  read: boolean
+  read?: boolean
 
   @ManyToOne(() => ChatRoom)
   chatroom: ChatRoom 
@@ -20,5 +20,5 @@ export class Message {
   value: string
 
   @CreateDateColumn()
-  created_at: Date
+  created_at?: Date
 }

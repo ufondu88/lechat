@@ -12,7 +12,7 @@ export class ApiKeyAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
 
-    const apiKey = req.headers['x-api-key']
+    const apiKey: string = req.headers['x-api-key']
 
     if (!apiKey) {
       throw new UnauthorizedException('No API key present');
