@@ -9,7 +9,7 @@ const { ENCRYPTION_IV, ENCRYPTION_KEY, ENCRYPTION_METHOD } = process.env
 @Injectable()
 export class CryptoService {
   private key = this.createHash(ENCRYPTION_KEY, 32);
-  private iv = this.createHash(ENCRYPTION_IV, 16);
+  private iv = this.createHash(ENCRYPTION_IV, 16); 
 
   /**
    * Creates a hash based on the provided data and hash length.
