@@ -27,8 +27,6 @@ describe('CommunityService', () => {
     telephone: 'tel',
     isAdmin: false,
     communities: [],
-    created_at: new Date(),
-    updated_at: new Date(),
     formatTelephone() { },
     updateValues() { },
   }

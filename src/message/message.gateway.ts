@@ -1,17 +1,17 @@
 import { OnModuleInit } from '@nestjs/common';
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { BaseSupabaseService } from '../helpers/classes/base.supabase.service';
 import { Event } from './subscriptions.enum';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { MessageService } from './message.service';
+import { BaseController } from '../helpers/classes/base.controller';
 
 @WebSocketGateway({
   cors: {
     origin: '*'
   }
 })
-export class MessageGateway extends BaseSupabaseService implements OnModuleInit {
+export class MessageGateway extends BaseController implements OnModuleInit {
   @WebSocketServer() server: Server
   static rooms: Record<string, string[]> = {}
 
