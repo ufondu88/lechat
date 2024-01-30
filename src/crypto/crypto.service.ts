@@ -3,6 +3,7 @@ import * as crypto from 'crypto';
 import { Crypto } from './crypto.enum';
 
 require('dotenv').config();
+
 @Injectable()
 export class CryptoService {
   ENCRYPTION_KEY = process.env['ENCRYPTION_KEY']
@@ -19,10 +20,7 @@ export class CryptoService {
    * @param hashLength - The length of the resulting hash.
    * @returns The hashed string.
    */
-  private createHash(data: string, hashLength: number): string {
-    console.log(this.ENCRYPTION_KEY);
-    console.log(this.ENCRYPTION_IV);
-    
+  private createHash(data: string, hashLength: number): string {    
     return crypto
       .createHash(Crypto.HASH_ALGORITHM)
       .update(data, Crypto.HASH_INPUT_ENCODING)

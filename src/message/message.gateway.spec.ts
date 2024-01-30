@@ -15,7 +15,13 @@ describe('MessageGateway', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         MessageGateway,
-        MessageService,
+        {
+          provide: MessageService,
+          useValue: {
+            create: jest.fn(),
+            findAllByChatroom: jest.fn(),
+          }
+        },
         {
           provide: MESSAGE_REPO_TOKEN,
           useValue: {
