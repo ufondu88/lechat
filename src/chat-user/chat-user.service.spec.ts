@@ -8,11 +8,15 @@ import { Repository, In } from 'typeorm';
 import { Community } from 'community/entities/community.entity';
 import { CreateChatUserDto } from './dto/create-chat-user.dto';
 import { UpdateChatUserDto } from './dto/update-chat-user.dto';
+import { NotFoundException } from '@nestjs/common';
 
 describe('ChatUserService', () => {
   let service: ChatUserService;
   let communityService: CommunityService
   let repo: Repository<ChatUser>
+  let spyLoggerError: jest.SpyInstance
+  let createSpy: jest.SpyInstance
+  let saveSpy: jest.SpyInstance
 
   const apiKey = "api-key"
 
@@ -60,6 +64,9 @@ describe('ChatUserService', () => {
     service = module.get(ChatUserService);
     communityService = module.get(CommunityService);
     repo = module.get<Repository<ChatUser>>(CHATUSER_REPO_TOKEN);
+    spyLoggerError = jest.spyOn(service.logger, 'error');
+    createSpy = jest.spyOn(repo, 'create')
+    saveSpy = jest.spyOn(repo, 'save')
   });
 
   it('should be defined', () => {
@@ -80,13 +87,18 @@ describe('ChatUserService', () => {
     })
 
     it('should throw NotFoundException if community is not found', async () => {
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
-
       jest.spyOn(communityService, 'findOneByApiKey').mockResolvedValue(undefined)
 
-      await service.create(createChatUserDto, apiKey);
+      try {
+        await service.create(createChatUserDto, apiKey);
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(saveSpy).not.toHaveBeenCalled();
     })
   })
 
@@ -129,13 +141,17 @@ describe('ChatUserService', () => {
     })
 
     it('should throw NotFoundException if user is not found', async () => {
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
-
       jest.spyOn(service, 'findOneByID').mockResolvedValue(undefined)
 
-      await service.update(id, updateChatUserDto)
+      try {
+        await service.update(id, updateChatUserDto)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(saveSpy).not.toHaveBeenCalled();
     })
   })
 
@@ -154,14 +170,17 @@ describe('ChatUserService', () => {
     })
 
     it('should throw NotFoundException if user is not found', async () => {
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
       const deleteResult = { affected: 0, raw: 0 }
 
       jest.spyOn(repo, 'delete').mockResolvedValue(deleteResult)
 
-      await service.remove(id)
-
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      try {
+        await service.remove(id)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
     })
   })
 });

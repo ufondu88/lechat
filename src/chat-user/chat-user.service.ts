@@ -38,6 +38,8 @@ export class ChatUserService extends BaseController {
       return await this.chatUserRepo.save(chatUser);
     } catch (error) {
       this.logger.error(`Error creating chat user: ${error.message}`);
+
+      throw error
     }
   }
 
@@ -131,6 +133,8 @@ export class ChatUserService extends BaseController {
       return await this.chatUserRepo.save(chatuser);
     } catch (error) {
       this.logger.error(`Error updating chat user: ${error.message}`);
+
+      throw error
     }
   }
 
@@ -152,6 +156,8 @@ export class ChatUserService extends BaseController {
       return `Chat user with ID "${id}" deleted successfully`;
     } catch (error) {
       this.logger.error(`Error removing chat user: ${error.message}`);
+
+      throw error
     }
   }
 }
