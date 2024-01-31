@@ -40,6 +40,8 @@ export class ChatroomService extends BaseController {
       return await this.chatroomRepo.save(chatroom);
     } catch (error) {
       this.logger.error(`Error creating chatroom: ${error.message}`)
+
+      throw error
     }
   }
 
@@ -149,6 +151,8 @@ export class ChatroomService extends BaseController {
       return chatroom;
     } catch (error) {
       this.logger.error(`Error updating chatroom: ${error.message}`);
+
+      throw error
     }
   }
 
@@ -169,6 +173,8 @@ export class ChatroomService extends BaseController {
       return `Chatroom with ID "${id}" deleted successfully`;
     } catch (error) {
       this.logger.error(`Error removing chatroom: ${error.message}`);
+
+      throw error
     }
   }
 }

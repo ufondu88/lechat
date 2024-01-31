@@ -7,10 +7,14 @@ import { ChatRoom } from './entities/chatroom.entity';
 import { ChatUserService } from '../chat-user/chat-user.service';
 import { ChatUser } from '../chat-user/entities/chat-user.entity';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 describe('ChatroomService', () => {
   let service: ChatroomService;
   let chatUserService: ChatUserService;
+  let spyLoggerError: jest.SpyInstance
+  let createSpy: jest.SpyInstance
+  let saveSpy: jest.SpyInstance
 
   let repo: Repository<ChatRoom>;
   let chatroomChatUserRepo: Repository<ChatroomChatuser>;
@@ -74,6 +78,9 @@ describe('ChatroomService', () => {
     chatUserService = module.get(ChatUserService);
     repo = module.get(CHATROOM_REPO_TOKEN);
     chatroomChatUserRepo = module.get(CHATROOM_CHATUSER_REPO_TOKEN);
+    spyLoggerError = jest.spyOn(service.logger, 'error');
+    createSpy = jest.spyOn(repo, 'create')
+    saveSpy = jest.spyOn(repo, 'save')
   });
 
   it('should be defined', () => {
@@ -101,17 +108,19 @@ describe('ChatroomService', () => {
 
     it('should throw BadRequestException when at least one user does not exist', async () => {
       const chatters = ['user1', 'user2'];
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
 
       jest.spyOn(chatUserService, 'usersExist').mockResolvedValue(false);
-      jest.spyOn(repo, 'create')
-      jest.spyOn(repo, 'save')
 
-      await service.create(chatters)
- 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
-      expect(repo.create).not.toHaveBeenCalled();
-      expect(repo.save).not.toHaveBeenCalled();
+      try {
+        await service.create(chatters)
+      } catch (error) {
+        expect(error).toBeInstanceOf(BadRequestException);
+        expect(error.message).toContain("not exist")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
+
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(saveSpy).not.toHaveBeenCalled();
     }); 
   });
 
@@ -270,13 +279,17 @@ describe('ChatroomService', () => {
     })
 
     it('should throw NotFoundException if chatroom is not found', async () => {
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
-
       jest.spyOn(service, 'findOne').mockResolvedValue(undefined)
 
-      await service.update(id, updateChatroomDto)
+      try {
+        await service.update(id, updateChatroomDto)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(saveSpy).not.toHaveBeenCalled();
     })
   })
 
@@ -295,14 +308,17 @@ describe('ChatroomService', () => {
     })
 
     it('should throw NotFoundException if chatroom is not found', async () => {
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
       const deleteResult = { affected: 0, raw: 0 }
 
       jest.spyOn(repo, 'delete').mockResolvedValue(deleteResult)
 
-      await service.remove(id)
-
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      try {
+        await service.remove(id)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
     })
   })
 });
