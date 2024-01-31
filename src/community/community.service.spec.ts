@@ -10,6 +10,7 @@ import { CommunityService } from './community.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community } from './entities/community.entity';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('CommunityService', () => {
   let service: CommunityService;
@@ -18,6 +19,8 @@ describe('CommunityService', () => {
   let repo: Repository<Community>
 
   let spyLoggerError: jest.SpyInstance
+  let createSpy: jest.SpyInstance
+  let saveSpy: jest.SpyInstance
 
   const COMMUNITY_REPO_TOKEN = getRepositoryToken(Community)
   const user: User = {
@@ -89,6 +92,8 @@ describe('CommunityService', () => {
     userService = module.get(UserService)
 
     spyLoggerError = jest.spyOn(service.logger, 'error');
+    createSpy = jest.spyOn(repo, 'create')
+    saveSpy = jest.spyOn(repo, 'save')
 
   });
 
@@ -115,22 +120,38 @@ describe('CommunityService', () => {
     });
 
     it('should throw NotFoundException if user not found', async () => {
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
       jest.spyOn(userService, 'findOneByID').mockResolvedValue(undefined);
 
-      await service.create(createCommunityDto, 'b07f6d9c-5019-416b-b9ba-6156223e029f');
+      try {
+        await service.create(createCommunityDto, 'b07f6d9c-5019-416b-b9ba-6156223e029f');
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(jest.spyOn(service, 'findOneByName')).not.toHaveBeenCalled()
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(saveSpy).not.toHaveBeenCalled();
+      expect(jest.spyOn(apiKeyService, 'createKey')).not.toHaveBeenCalled()
     });
 
     it('should throw ConflictException if community name already exists', async () => {
-      const spyLoggerError = jest.spyOn(service.logger, 'error');
       jest.spyOn(userService, 'findOneByID').mockResolvedValue(user);
       jest.spyOn(service, 'findOneByName').mockResolvedValue(community);
 
-      await service.create(createCommunityDto, 'b07f6d9c-5019-416b-b9ba-6156223e029f');
+      try {
+        await service.create(createCommunityDto, 'b07f6d9c-5019-416b-b9ba-6156223e029f');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ConflictException);
+        expect(error.message).toContain("already exists")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(jest.spyOn(userService, 'findOneByID')).toHaveBeenCalled()
+      expect(createSpy).not.toHaveBeenCalled();
+      expect(saveSpy).not.toHaveBeenCalled();
+      expect(jest.spyOn(apiKeyService, 'createKey')).not.toHaveBeenCalled()
     });
   });
 
@@ -202,50 +223,61 @@ describe('CommunityService', () => {
 
   describe('findOneByApiKey', () => {
     it('should find community by API key', async () => {
-      jest.spyOn(service, 'findAll').mockResolvedValue(communities)
+      const findAllSpy = jest.spyOn(service, 'findAll').mockResolvedValue(communities)
       const findSpy = jest.spyOn(Array.prototype, 'find')
 
       const result = await service.findOneByApiKey(key);
 
+      expect(findAllSpy).toHaveBeenCalledWith(['apiKey'])
       expect(findSpy).toHaveBeenCalled()
       expect(result).toEqual(community)
     });
 
-    it('should not find community by API key', async () => {
-      jest.spyOn(service, 'findAll').mockResolvedValue(communities)
-      const findSpy = jest.spyOn(Array.prototype, 'find')
-
-      const result = await service.findOneByApiKey('no key');
-
-      expect(findSpy).toHaveBeenCalled()
-      expect(result).not.toEqual(community)
-      expect(result).toBe(undefined)
-    });
-
     it('should throw NotFoundException if there are no communities', async () => {
       jest.spyOn(service, 'findAll').mockResolvedValue(undefined)
+ 
+      try {
+        await service.findOneByApiKey(key)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      await service.findOneByApiKey(key)
-
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(jest.spyOn(service, 'findAll')).toHaveBeenCalledWith(['apiKey'])
+      // expect(jest.spyOn(Array.prototype, 'find')).not.toHaveBeenCalled();
     })
 
     it('should throw NotFoundException if length of community is 0', async () => {
       jest.spyOn(service, 'findAll').mockResolvedValue([])
 
-      await service.findOneByApiKey(key)
+      try {
+        await service.findOneByApiKey(key)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(jest.spyOn(service, 'findAll')).toHaveBeenCalledWith(['apiKey'])
+      // expect(jest.spyOn(Array.prototype, 'find')).not.toHaveBeenCalled();
     })
 
     it('should throw NotFoundException if community is not found', async () => {
       jest.spyOn(service, 'findAll').mockResolvedValue(communities)
 
       const findSpy = jest.spyOn(Array.prototype, 'find').mockReturnValue(undefined)
-      await service.findOneByApiKey(key);
 
+      try {
+        await service.findOneByApiKey(key)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
+
+      expect(jest.spyOn(service, 'findAll')).toHaveBeenCalledWith(['apiKey'])
       expect(findSpy).toHaveBeenCalled()
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
     })
   });
 
@@ -267,9 +299,15 @@ describe('CommunityService', () => {
     it('should throw NotFoundException if community is not found', async () => {
       jest.spyOn(service, 'findOne').mockResolvedValue(undefined)
 
-      await service.update(id, updateCommunityDto)
+      try {
+        await service.update(id, updateCommunityDto)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
 
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      expect(saveSpy).not.toHaveBeenCalled();
     })
   })
 
@@ -292,9 +330,13 @@ describe('CommunityService', () => {
 
       jest.spyOn(repo, 'delete').mockResolvedValue(deleteResult)
 
-      await service.remove(id)
-
-      expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      try {
+        await service.remove(id)
+      } catch (error) {
+        expect(error).toBeInstanceOf(NotFoundException);
+        expect(error.message).toContain("not found")
+        expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
+      }
     })
   })
 

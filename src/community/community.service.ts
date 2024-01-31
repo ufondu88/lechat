@@ -47,6 +47,8 @@ export class CommunityService extends BaseController {
       return `Community ${community.name} created successfully`;
     } catch (error) {
       this.logger.error(`Error creating community: ${error.message}`);
+
+      throw error
     }
   }
 
@@ -99,6 +101,8 @@ export class CommunityService extends BaseController {
       return community;
     } catch (error) {
       this.logger.error(`Error finding community by API key: ${error.message}`)
+
+      throw error
     }
   }
 
@@ -123,6 +127,8 @@ export class CommunityService extends BaseController {
       return community;
     } catch (error) {
       this.logger.error(`Error updating community: ${error.message}`);
+
+      throw error
     }
   }
 
@@ -143,6 +149,8 @@ export class CommunityService extends BaseController {
       return `Community with ID "${id}" deleted successfully`;
     } catch (error) {
       this.logger.error(`Error removing community: ${error.message}`);
+
+      throw error
     }
   }
 }
