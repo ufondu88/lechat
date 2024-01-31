@@ -94,11 +94,8 @@ describe('ChatroomService', () => {
       jest.spyOn(chatUserService, 'usersExist').mockResolvedValue(true);
       jest.spyOn(service, 'findExistingOne').mockResolvedValue(undefined);
       jest.spyOn(chatUserService, 'findManyById').mockResolvedValue(chatUsers);
-      jest.spyOn(repo, 'create').mockReturnValue(chatroom)
-      jest.spyOn(repo, 'save').mockResolvedValue(chatroom)
-
-      const createSpy = jest.spyOn(repo, 'create');
-      const saveSpy = jest.spyOn(repo, 'save');
+      createSpy.mockReturnValue(chatroom)
+      saveSpy.mockResolvedValue(chatroom)
 
       await service.create(chatters); 
 
@@ -200,12 +197,12 @@ describe('ChatroomService', () => {
     it('should not find an existing chatroom for the provided chatters', async () => {
       const id = 'no-chatroom'
       const findAllSpy = jest.spyOn(service, 'findAll').mockResolvedValue(chatrooms);
-      const findSpy = jest.spyOn(Array.prototype, 'some');
+      const arraySomeSpy = jest.spyOn(Array.prototype, 'some');
 
       const result = await service.findByUserId(id);
 
       expect(findAllSpy).toHaveBeenCalledWith(['users']);
-      expect(findSpy).toHaveBeenCalled();
+      expect(arraySomeSpy).toHaveBeenCalled();
       expect(result).toEqual([]) 
     });
   });
@@ -271,7 +268,7 @@ describe('ChatroomService', () => {
 
     it('should update and return chatroom', async () => {
       jest.spyOn(service, 'findOne').mockResolvedValue(chatroom)
-      jest.spyOn(repo, 'save').mockResolvedValue(chatroom)
+      saveSpy.mockResolvedValue(chatroom)
 
       const result = await service.update(id, updateChatroomDto)
 
