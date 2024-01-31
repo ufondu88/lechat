@@ -7,12 +7,14 @@ import { ChatroomController } from './chatroom.controller';
 import { ChatroomService } from './chatroom.service';
 import { ChatroomChatuser } from './entities/chatromm-chatuser.entity';
 import { ChatRoom } from './entities/chatroom.entity';
+import { CommunityModule } from 'community/community.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([ChatRoom, ChatroomChatuser]),
     ApiKeyModule,
     ChatUserModule,
+    CommunityModule
   ],
   controllers: [ChatroomController],
   providers: [
