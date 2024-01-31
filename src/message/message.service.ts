@@ -63,14 +63,14 @@ export class MessageService extends BaseController {
 
       throw error
     }
-  }
+  } 
 
   validateUser(userId: string) {
-    return this.chatUserService.findOneByID(userId);
+    return this.chatUserService.findOneBy({id: userId});
   }
 
   validateChatroom(chatroomId: string) {
-    return this.chatroomService.findOne(chatroomId);
+    return this.chatroomService.findOneBy({id: chatroomId});
   }
 
   async validateUserInChatroom(userId: string, chatroomId: string) {

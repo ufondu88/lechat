@@ -74,7 +74,7 @@ export class AuthService extends BaseSupabaseService {
       const { email, password } = resetCredentials;
 
       // Find the user in the database by email
-      const currentUser = await this.userService.findOneByID(email);
+      const currentUser = await this.userService.findOneBy({ email });
 
       // If the user is not found, throw an error
       if (!currentUser) throw new UnauthorizedException('User not found');

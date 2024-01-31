@@ -87,7 +87,7 @@ describe('UserService', () => {
       const user = {email} as User
       const findOneBySpy = jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(user)
 
-      await service.findOneByEmail(email);
+      await service.findOneBy({email});
 
       expect(findOneBySpy).toHaveBeenCalledWith({ email });
     });
@@ -96,7 +96,7 @@ describe('UserService', () => {
       const email = 'test@example.com';
       const findOneBySpy = jest.spyOn(userRepository, 'findOneBy').mockResolvedValue(undefined)
 
-      const result = await service.findOneByEmail(email);
+      const result = await service.findOneBy({email});
 
       expect(findOneBySpy).toHaveBeenCalledWith({ email });
       expect(result).not.toBeDefined()
@@ -111,7 +111,7 @@ describe('UserService', () => {
     const user = { id: '1', isAdmin: true } as User
 
     it('should update and return user', async () => {
-      jest.spyOn(service, 'findOneByID').mockResolvedValue(user)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(user)
       jest.spyOn(userRepository, 'save').mockResolvedValue(user)
 
       const result = await service.update(id, updateUserDto)
@@ -120,7 +120,7 @@ describe('UserService', () => {
     })
 
     it('should throw NotFoundException if user is not found', async () => {
-      jest.spyOn(service, 'findOneByID').mockResolvedValue(undefined)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(undefined)
       const saveSpy = jest.spyOn(userRepository, 'save')
 
       try {

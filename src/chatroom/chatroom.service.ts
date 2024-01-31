@@ -1,14 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ChatUserService } from '../chat-user/chat-user.service';
-import { BaseController } from '../helpers/classes/base.controller';
 import { Repository } from 'typeorm';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 import { ChatroomChatuser } from './entities/chatromm-chatuser.entity';
 import { ChatRoom } from './entities/chatroom.entity';
+import { UpdaterService } from '../helpers/classes/updater.service';
 
 @Injectable()
-export class ChatroomService extends BaseController {
+export class ChatroomService extends UpdaterService<ChatRoom, UpdateChatroomDto> {
   constructor(
     @InjectRepository(ChatRoom)
     private chatroomRepo: Repository<ChatRoom>,
@@ -16,7 +16,7 @@ export class ChatroomService extends BaseController {
     private chatroomChatUser: Repository<ChatroomChatuser>,
     private chatUserService: ChatUserService
   ) {
-    super('ChatroomService')
+    super('ChatroomService', 'chatroom', chatroomRepo)
   }
 
   /**
@@ -105,16 +105,6 @@ export class ChatroomService extends BaseController {
   }
 
   /**
-   * Retrieves a chatroom based on the provided ID.
-   *
-   * @param id - Chatroom ID to find.
-   * @returns The found chatroom or undefined if not found.
-   */
-  findOne(id: string): Promise<ChatRoom | undefined> {
-    return this.chatroomRepo.findOneBy({ id });
-  }
-
-  /**
    * Checks if a user is part of a specific chatroom.
    *
    * @param userID - User ID to check.
@@ -129,53 +119,6 @@ export class ChatroomService extends BaseController {
     });
 
     return chatUserChatroom ? true : false
-  }
-
-  /**
-   * Updates an existing chatroom based on the provided ID and DTO.
-   *
-   * @param id - Chatroom ID to update.
-   * @param updateChatroomDto - DTO containing information to update the chatroom.
-   * @returns The updated chatroom or throws a NotFoundException if the chatroom is not found.
-   */
-  async update(id: string, updateChatroomDto: UpdateChatroomDto) {
-    try {
-      const chatroom = await this.findOne(id);
-      if (!chatroom)
-        throw new NotFoundException(`Chatroom with ID "${id}" not found`);
-
-      await this.chatroomRepo.save(chatroom);
-
-      this.logger.log(`Chatroom with ID "${id}" updated successfully`);
-
-      return chatroom;
-    } catch (error) {
-      this.logger.error(`Error updating chatroom: ${error.message}`);
-
-      throw error
-    }
-  }
-
-  /**
-   * Removes a chatroom based on the provided ID.
-   *
-   * @param id - Chatroom ID to remove.
-   * @returns Promise<string> or throws a NotFoundException if the chatroom is not found.
-   */
-  async remove(id: string) {
-    try {
-      const result = await this.chatroomRepo.delete(id);
-      if (result.affected === 0)
-        throw new NotFoundException(`Chatroom with ID "${id}" not found`);
-
-      this.logger.log(`Chatroom with ID "${id}" deleted successfully`);
-
-      return `Chatroom with ID "${id}" deleted successfully`;
-    } catch (error) {
-      this.logger.error(`Error removing chatroom: ${error.message}`);
-
-      throw error
-    }
   }
 }
 

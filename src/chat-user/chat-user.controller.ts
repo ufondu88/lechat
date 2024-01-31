@@ -23,7 +23,7 @@ export class ChatUserController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.chatUserService.findOneByID(id);
+    return this.chatUserService.findOneBy({id});
   }
 
   @Patch(':id')

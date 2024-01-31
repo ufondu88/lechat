@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserController } from './user.controller';
-import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import { UserController } from './user.controller';
+import { UserService } from './user.service';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -29,8 +29,7 @@ describe('UserController', () => {
           useValue: {
             create: jest.fn(),
             findAll: jest.fn(),
-            findOneByID: jest.fn(),
-            findOneByEmail: jest.fn(),
+            findOneBy: jest.fn(),
             update: jest.fn(),
             remove: jest.fn(),
           },
@@ -78,25 +77,25 @@ describe('UserController', () => {
       const userId = '1';
       const user = { id: userId, name: 'John Doe', email: 'john@example.com' } as User;
 
-      jest.spyOn(service, 'findOneByID').mockResolvedValue(user);
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(user);
 
       const result = await controller.findOneByID(userId);
 
-      expect(service.findOneByID).toHaveBeenCalledWith(userId);
+      expect(service.findOneBy).toHaveBeenCalledWith({ id: userId });
       expect(result).toEqual(user);
     });
   });
 
   describe('findOneByEmail', () => {
     it('should retrieve a user by email', async () => {
-      const email =  'john@example.com'
+      const email = 'john@example.com'
       const user = { email } as User;
 
-      jest.spyOn(service, 'findOneByEmail').mockResolvedValue(user);
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(user);
 
       const result = await controller.findOneByEmail(email);
 
-      expect(service.findOneByEmail).toHaveBeenCalledWith(email);
+      expect(service.findOneBy).toHaveBeenCalledWith({email});
       expect(result).toEqual(user);
     });
   });

@@ -28,14 +28,14 @@ export class UserController extends BaseController {
   findOneByID(@Param('id') id: string) {
     this.logger.log(`Getting user by ID: ${id}`)
 
-    return this.userService.findOneByID(id);
+    return this.userService.findOneBy({ id });
   }
 
   @Get('email/:email')
   findOneByEmail(@Param('email') email: string) {
     this.logger.log(`Getting user by email: ${email}`)
 
-    return this.userService.findOneByEmail(email);
+    return this.userService.findOneBy({email});
   }
 
   @Patch(':id')

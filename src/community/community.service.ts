@@ -1,21 +1,21 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UpdaterService } from '../helpers/classes/updater.service';
 import { Repository } from 'typeorm';
 import { ApiKeyService } from '../api-key/api-key.service';
-import { BaseController } from '../helpers/classes/base.controller';
 import { UserService } from '../user/user.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community } from './entities/community.entity';
 
 @Injectable()
-export class CommunityService extends BaseController {
+export class CommunityService extends UpdaterService<Community, UpdateCommunityDto> {
   constructor(
     @InjectRepository(Community)
     private communityRepo: Repository<Community>,
     private apiKeyService: ApiKeyService,
     private userService: UserService
-  ) { super('CommunityService') }
+  ) { super('CommunityService', 'community', communityRepo) }
 
   /**
    * Creates a new community, associates it with a user, and generates an API key.
@@ -27,11 +27,11 @@ export class CommunityService extends BaseController {
   async create(createCommunityDto: CreateCommunityDto, userId: string): Promise<string> {
     try {
       // get user
-      const user = await this.userService.findOneByID(userId);
+      const user = await this.userService.findOneBy({ id: userId });
       if (!user) throw new NotFoundException('User not found');
 
       // check if community exists already
-      const existingCommunity = await this.findOneByName(createCommunityDto.name);
+      const existingCommunity = await this.findOneBy({ name: createCommunityDto.name });
       if (existingCommunity) throw new ConflictException('Community name already exists');
 
       // create and save the community
@@ -53,36 +53,6 @@ export class CommunityService extends BaseController {
   }
 
   /**
-   * Retrieves all communities with optional relations.
-   *
-   * @param relations - Array of relation names to include in the result.
-   * @returns Array of communities.
-   */
-  findAll(relations: string[] = []): Promise<Community[]> {
-    return this.communityRepo.find({ relations });
-  }
-
-  /**
-   * Retrieves a community based on the provided ID.
-   *
-   * @param id - Community ID to find.
-   * @returns The found community or undefined if not found.
-   */
-  findOne(id: string): Promise<Community | undefined> {
-    return this.communityRepo.findOneBy({ id });
-  }
-
-  /**
-   * Retrieves a community based on the provided name.
-   *
-   * @param name - Community name to find.
-   * @returns The found community or undefined if not found.
-   */
-  findOneByName(name: string): Promise<Community | undefined> {
-    return this.communityRepo.findOneBy({ name });
-  }
-
-  /**
    * Retrieves a community based on the provided API key.
    *
    * @param key - API key to find the associated community.
@@ -101,54 +71,6 @@ export class CommunityService extends BaseController {
       return community;
     } catch (error) {
       this.logger.error(`Error finding community by API key: ${error.message}`)
-
-      throw error
-    }
-  }
-
-  /**
-   * Updates an existing community based on the provided ID and DTO.
-   *
-   * @param id - Community ID to update.
-   * @param updateCommunityDto - DTO containing information to update the community.
-   * @returns The updated community or throws a NotFoundException if the community is not found.
-   */
-  async update(id: string, updateCommunityDto: UpdateCommunityDto) {
-    try {
-      const community = await this.findOne(id);
-      if (!community)
-        throw new NotFoundException(`Community with ID "${id}" not found`);
-
-      community.name = updateCommunityDto.name;
-      await this.communityRepo.save(community);
-
-      this.logger.log(`Community with ID "${id}" updated successfully`);
-
-      return community;
-    } catch (error) {
-      this.logger.error(`Error updating community: ${error.message}`);
-
-      throw error
-    }
-  }
-
-  /**
-   * Removes a community based on the provided ID.
-   *
-   * @param id - Community ID to remove.
-   * @returns Promise<string> or throws a NotFoundException if the community is not found.
-   */
-  async remove(id: string) {
-    try {
-      const result = await this.communityRepo.delete(id);
-      if (result.affected === 0)
-        throw new NotFoundException(`Community with ID "${id}" not found`);
-
-      this.logger.log(`Community with ID "${id}" deleted successfully`);
-
-      return `Community with ID "${id}" deleted successfully`;
-    } catch (error) {
-      this.logger.error(`Error removing community: ${error.message}`);
 
       throw error
     }

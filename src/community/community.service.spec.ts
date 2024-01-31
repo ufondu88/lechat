@@ -1,3 +1,4 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ApiKey } from 'api-key/entities/api-key.entity';
@@ -10,7 +11,6 @@ import { CommunityService } from './community.service';
 import { CreateCommunityDto } from './dto/create-community.dto';
 import { UpdateCommunityDto } from './dto/update-community.dto';
 import { Community } from './entities/community.entity';
-import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('CommunityService', () => {
   let service: CommunityService;
@@ -80,7 +80,7 @@ describe('CommunityService', () => {
         {
           provide: UserService,
           useValue: {
-            findOneByID: jest.fn(),
+            findOneBy: jest.fn(),
           }
         }
       ]
@@ -103,8 +103,8 @@ describe('CommunityService', () => {
     };
 
     it('should create a community', async () => {
-      jest.spyOn(userService, 'findOneByID').mockResolvedValue(user);
-      jest.spyOn(service, 'findOneByName').mockResolvedValue(undefined);
+      jest.spyOn(userService, 'findOneBy').mockResolvedValue(user);
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(undefined);
       jest.spyOn(apiKeyService, 'createKey').mockResolvedValue(undefined);
       jest.spyOn(repo, 'create').mockReturnValueOnce(community)
       jest.spyOn(repo, 'save').mockResolvedValue(community)
@@ -120,7 +120,7 @@ describe('CommunityService', () => {
     });
 
     it('should throw NotFoundException if user not found', async () => {
-      jest.spyOn(userService, 'findOneByID').mockResolvedValue(undefined);
+      jest.spyOn(userService, 'findOneBy').mockResolvedValue(undefined);
 
       try {
         await service.create(createCommunityDto, 'b07f6d9c-5019-416b-b9ba-6156223e029f');
@@ -130,15 +130,15 @@ describe('CommunityService', () => {
         expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
       }
 
-      expect(jest.spyOn(service, 'findOneByName')).not.toHaveBeenCalled()
+      expect(jest.spyOn(service, 'findOneBy')).not.toHaveBeenCalled()
       expect(createSpy).not.toHaveBeenCalled();
       expect(saveSpy).not.toHaveBeenCalled();
       expect(jest.spyOn(apiKeyService, 'createKey')).not.toHaveBeenCalled()
     });
 
     it('should throw ConflictException if community name already exists', async () => {
-      jest.spyOn(userService, 'findOneByID').mockResolvedValue(user);
-      jest.spyOn(service, 'findOneByName').mockResolvedValue(community);
+      jest.spyOn(userService, 'findOneBy').mockResolvedValue(user);
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(community);
 
       try {
         await service.create(createCommunityDto, 'b07f6d9c-5019-416b-b9ba-6156223e029f');
@@ -148,7 +148,7 @@ describe('CommunityService', () => {
         expect(spyLoggerError).toHaveBeenCalledWith(expect.stringContaining("Error"));
       }
 
-      expect(jest.spyOn(userService, 'findOneByID')).toHaveBeenCalled()
+      expect(jest.spyOn(userService, 'findOneBy')).toHaveBeenCalled()
       expect(createSpy).not.toHaveBeenCalled();
       expect(saveSpy).not.toHaveBeenCalled();
       expect(jest.spyOn(apiKeyService, 'createKey')).not.toHaveBeenCalled()
@@ -177,12 +177,12 @@ describe('CommunityService', () => {
     });
   });
 
-  describe('findOne', () => {
+  describe('findOneBy', () => {
     it('should find community by ID', async () => {
       const id = community.id;
       const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(community);
 
-      const result = await service.findOne(id);
+      const result = await service.findOneBy({id});
 
       expect(findSpy).toHaveBeenCalledWith({ id });
       expect(result).toEqual(community)
@@ -192,19 +192,19 @@ describe('CommunityService', () => {
       const id = 'no-community'
       const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(undefined);
 
-      const result = await service.findOne(id);
+      const result = await service.findOneBy({id});
 
       expect(findSpy).toHaveBeenCalledWith({ id });
       expect(result).toBe(undefined)
     });
   });
 
-  describe('findOneByName', () => {
+  describe('findOneBy', () => {
     it('should find community by name', async () => {
       const name = community.name;
       const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(community);
 
-      const result = await service.findOneByName(name);
+      const result = await service.findOneBy({name});
 
       expect(findSpy).toHaveBeenCalledWith({ name });
       expect(result).toEqual(community)
@@ -214,7 +214,7 @@ describe('CommunityService', () => {
       const name = 'no-community'
       const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(undefined);
 
-      const result = await service.findOneByName(name);
+      const result = await service.findOneBy({name});
 
       expect(findSpy).toHaveBeenCalledWith({ name });
       expect(result).toBe(undefined)
@@ -235,7 +235,7 @@ describe('CommunityService', () => {
 
     it('should throw NotFoundException if there are no communities', async () => {
       jest.spyOn(service, 'findAll').mockResolvedValue(undefined)
- 
+
       try {
         await service.findOneByApiKey(key)
       } catch (error) {
@@ -288,7 +288,7 @@ describe('CommunityService', () => {
     };
 
     it('should update and return community', async () => {
-      jest.spyOn(service, 'findOne').mockResolvedValue(community)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(community)
       jest.spyOn(repo, 'save').mockResolvedValue(community)
 
       const result = await service.update(id, updateCommunityDto)
@@ -297,7 +297,7 @@ describe('CommunityService', () => {
     })
 
     it('should throw NotFoundException if community is not found', async () => {
-      jest.spyOn(service, 'findOne').mockResolvedValue(undefined)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(undefined)
 
       try {
         await service.update(id, updateCommunityDto)

@@ -212,7 +212,7 @@ describe('ChatroomService', () => {
       const id = chatUsers[0].id;
       const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(chatroom);
 
-      const result = await service.findOne(id);
+      const result = await service.findOneBy({id});
 
       expect(findSpy).toHaveBeenCalledWith({ id });
       expect(result).toEqual(chatroom)
@@ -222,7 +222,7 @@ describe('ChatroomService', () => {
       const id = 'no-chatroom'
       const findSpy = jest.spyOn(repo, 'findOneBy').mockResolvedValue(undefined);
 
-      const result = await service.findOne(id);
+      const result = await service.findOneBy({id});
 
       expect(findSpy).toHaveBeenCalledWith({ id });
       expect(result).toBe(undefined)
@@ -267,7 +267,7 @@ describe('ChatroomService', () => {
     };
 
     it('should update and return chatroom', async () => {
-      jest.spyOn(service, 'findOne').mockResolvedValue(chatroom)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(chatroom)
       saveSpy.mockResolvedValue(chatroom)
 
       const result = await service.update(id, updateChatroomDto)
@@ -276,7 +276,7 @@ describe('ChatroomService', () => {
     })
 
     it('should throw NotFoundException if chatroom is not found', async () => {
-      jest.spyOn(service, 'findOne').mockResolvedValue(undefined)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(undefined)
 
       try {
         await service.update(id, updateChatroomDto)

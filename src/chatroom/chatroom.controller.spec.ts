@@ -31,7 +31,7 @@ describe('ChatroomController', () => {
             create: jest.fn(),
             findAll: jest.fn(),
             findByUserId: jest.fn(),
-            findOne: jest.fn(),
+            findOneBy: jest.fn(),
             update: jest.fn(),
             remove: jest.fn(),
           },
@@ -104,11 +104,11 @@ describe('ChatroomController', () => {
       const chatroomId = '1';
       const chatroom = { id: chatroomId } as ChatRoom;
 
-      jest.spyOn(service, 'findOne').mockResolvedValue(chatroom);
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(chatroom);
 
       await controller.findOne(chatroomId);
 
-      expect(service.findOne).toHaveBeenCalledWith(chatroomId);
+      expect(service.findOneBy).toHaveBeenCalledWith({id: chatroomId});
     });
   });
 

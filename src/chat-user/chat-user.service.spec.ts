@@ -131,7 +131,7 @@ describe('ChatUserService', () => {
     };
 
     it('should update and return chatuser', async () => {
-      jest.spyOn(service, 'findOneByID').mockResolvedValue(CHAT_USER)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(CHAT_USER)
       jest.spyOn(repo, 'save').mockResolvedValue(CHAT_USER)
 
       const result = await service.update(id, updateChatUserDto)
@@ -141,7 +141,7 @@ describe('ChatUserService', () => {
     })
 
     it('should throw NotFoundException if user is not found', async () => {
-      jest.spyOn(service, 'findOneByID').mockResolvedValue(undefined)
+      jest.spyOn(service, 'findOneBy').mockResolvedValue(undefined)
 
       try {
         await service.update(id, updateChatUserDto)

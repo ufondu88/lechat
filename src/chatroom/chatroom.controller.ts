@@ -24,7 +24,7 @@ export class ChatroomController extends BaseController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.chatroomService.findOne(id);
+    return this.chatroomService.findOneBy({id});
   }
 
   @Patch(':id')
