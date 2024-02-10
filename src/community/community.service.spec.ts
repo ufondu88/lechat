@@ -2,7 +2,6 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ApiKey } from 'api-key/entities/api-key.entity';
-import 'reflect-metadata'; // Add this line
 import { Repository } from 'typeorm';
 import { ApiKeyService } from '../api-key/api-key.service';
 import { User } from '../user/entities/user.entity';
@@ -56,6 +55,10 @@ describe('CommunityService', () => {
       apiKey: { id: '2', upToDate: true, key: 'another key' }
     }
   ]
+
+  const updateCommunityDto: UpdateCommunityDto = {
+    name: 'community name',
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
